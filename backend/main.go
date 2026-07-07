@@ -1,18 +1,17 @@
 package main
 
 import (
+	"Backend/intializer"
 	"mis/controller"
-	"mis/model"
 	"net/http"
 	"time"
 )
 
 func main() {
 	r := http.NewServeMux()
-
-	model.Loadenv()
-	model.DBconnect()
-	model.Dbmigrate()
+	intializer.Loadenv()
+	intializer.DBconnect()
+	intializer.Dbmigrate()
 	s := http.Server{
 		Addr:         ":8080",
 		Handler:      r,

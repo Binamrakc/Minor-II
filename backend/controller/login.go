@@ -65,5 +65,5 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusBadRequest)
-	w.Write([]byte("deleted!!"))
+	w.Write([]byte("user deleted!!"))
 }
