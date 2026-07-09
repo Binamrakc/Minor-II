@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Backend/intializer"
+	intializer "mis/Intializer"
 	"mis/controller"
 	"net/http"
 	"time"

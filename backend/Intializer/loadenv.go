@@ -1,4 +1,4 @@
-package model
+package intializer
 
 import (
 	"log"
