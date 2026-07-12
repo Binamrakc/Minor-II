@@ -21,6 +21,7 @@ Create TABLE if not exists Users{
 		create table if not exists register(
 		Id serial primary key
 		name varchar(55) not null,
+		email varchar(55) unique,
 		address varchar(55) not null,
 		phone integer not null,
 		age integer not null,

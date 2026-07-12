@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"mis/model"
+	intializer "mis/Intializer"
 	"net/http"
 )
 
@@ -12,7 +12,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	result := "INSERT INTO users (id, name) VALUES (?,?)"
 
-	_, err := model.DB.Exec(result, id, name)
+	_, err := intializer.DB.Exec(result, id, name)
 
 	if err != nil {
 		http.Error(w, "failed to get information", http.StatusInternalServerError)
@@ -27,9 +27,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	query := "SELECT * FROM users WHERE id=? AND name=?"
 
-	var users model.Users
+	var users intializer.Users
 
-	err := model.DB.Get(&users, query, id, name)
+	err := intializer.DB.Get(&users, query, id, name)
 
 	if err != nil {
 		http.Error(w, "failed to get user info", http.StatusInternalServerError)
@@ -44,7 +44,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	query := "update users set name=? WHERE id=? "
 
-	_, err := model.DB.Exec(query, id, name)
+	_, err := intializer.DB.Exec(query, id, name)
 
 	if err != nil {
 		http.Error(w, "failed to update", http.StatusBadRequest)
@@ -58,7 +58,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	query := "delete from users where id=?"
 
-	_, err := model.DB.Exec(query, id)
+	_, err := intializer.DB.Exec(query, id)
 
 	if err != nil {
 		http.Error(w, "failed to update", http.StatusBadRequest)

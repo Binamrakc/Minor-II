@@ -7,9 +7,10 @@ import (
 
 func Dbmigrate() {
 
-	content, err := os.ReadFile("database.sql")
+	content, err := os.ReadFile("../syncdatabase.go")
 	if err != nil {
 		log.Println("Could not read file", err)
+		return
 	}
 
 	_, err = DB.Exec(string(content))

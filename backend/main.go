@@ -2,6 +2,7 @@ package main
 
 import (
 	intializer "mis/Intializer"
+	middleware "mis/Middleware"
 	"mis/controller"
 	"net/http"
 	"time"
@@ -18,7 +19,7 @@ func main() {
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}
-	r.HandleFunc("GET/register", controller.Create)
+	r.HandleFunc("GET /register", middleware.Emailexists(controller.Create))
 	r.HandleFunc("/login", controller.Login)
 	r.HandleFunc("/update", controller.Update)
 	r.HandleFunc("/delete", controller.Delete)
