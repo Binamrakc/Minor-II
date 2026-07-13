@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func createUser(w http.ResponseWriter, r *http.Request) {
+func CreateUser(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	address := r.PathValue("address")
 	email := r.PathValue("email")
@@ -13,7 +13,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	age := r.PathValue("age")
 	date := r.PathValue("date")
 
-	result := "insert into register(name,address,email,phone,age,created_at) values ($1,$2,$3,$4,$5,$6)"
+	result := "insert into register(name,address,email,phone,age,created_at) values (?,?,?,?,?,?)"
 
 	_, err := intializer.DB.Exec(result, name, address, email, phone, age, date)
 	if err != nil {
