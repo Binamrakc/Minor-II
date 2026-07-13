@@ -5,7 +5,6 @@ import "log"
 func User() {
 
 	_, _ = DB.Exec("DROP TABLE IF EXISTS register;")
-	_, _ = DB.Exec("DROP TABLE IF EXISTS users;")
 
 	Register := `
 		create table if not exists register(
