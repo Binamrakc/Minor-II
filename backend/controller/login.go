@@ -1,69 +1,45 @@
 package controller
 
 import (
+	"encoding/json"
 	intializer "mis/Intializer"
+	"mis/model"
 	"net/http"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
-func Create(w http.ResponseWriter, r *http.Request) {
-
-	id := r.PathValue("id")
-	name := r.PathValue("name")
-
-	result := "INSERT INTO users (id, name) VALUES (?,?)"
-
-	_, err := intializer.DB.Exec(result, id, name)
-
-	if err != nil {
-		http.Error(w, "failed to get information", http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("user created succesfully"))
-}
 func Login(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	name := r.PathValue("name")
 
-	query := "SELECT * FROM users WHERE id=? AND name=?"
-
-	var users intializer.Users
-
-	err := intializer.DB.Get(&users, query, id, name)
-
-	if err != nil {
-		http.Error(w, "failed to get user info", http.StatusInternalServerError)
+	if r.Method != http.MethodGet {
+		http.Error(w, "invalid method", http.StatusUnauthorized)
 		return
 	}
-	w.WriteHeader(http.StatusAccepted)
-	w.Write([]byte("Login succesfully" + users.Name))
-}
-func Update(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	name := r.PathValue("id")
+	var login model.Registerinput
 
-	query := "update users set name=? WHERE id=? "
-
-	_, err := intializer.DB.Exec(query, id, name)
-
+	err := json.NewDecoder(r.Body).Decode(&login)
 	if err != nil {
-		http.Error(w, "failed to update", http.StatusBadRequest)
+		http.Error(w, "data not found", http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("updated successfully!!"))
-}
-func Delete(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
 
-	query := "delete from users where id=?"
+	var storeshash string
+	var id int
+	result := "Select id, password from register Where email=?"
 
-	_, err := intializer.DB.Exec(query, id)
-
+	err = intializer.DB.QueryRow(result, login.Email).Scan(&id, &storeshash)
 	if err != nil {
-		http.Error(w, "failed to update", http.StatusBadRequest)
+		http.Error(w, `{"message":"invalid email or password"}`, http.StatusUnauthorized)
 		return
 	}
-	w.WriteHeader(http.StatusBadRequest)
-	w.Write([]byte("user deleted!!"))
+	err = bcrypt.CompareHashAndPassword([]byte(storeshash), []byte(login.Password))
+	if err != nil {
+		http.Error(w, `{"message":"invalid email or password"}`, http.StatusUnauthorized)
+		return
+	}
+	response := map[string]string{
+		"message": "Login Successfully",
+		"Token":   "JWT Generated",
+	}
+	json.NewEncoder()
 }
