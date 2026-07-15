@@ -6,6 +6,9 @@ import (
 	"mis/controller"
 	"net/http"
 	"time"
+
+	"github.com/gin-contrib/cors"
+	"github.com/rs/cors"
 )
 
 func init() {
@@ -17,15 +20,21 @@ func init() {
 func main() {
 	r := http.NewServeMux()
 
+	c := cors.New(cors.Options{
+		AllowedOrigin:      []string{"https://localhost:3000"},
+		AllowedMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:     []string{"Content-Type", "Authorization"},
+		AllowedCredentials: true,
+	})
+	corshandler := c.Handler(r)
 	s := http.Server{
 		Addr:         ":8080",
-		Handler:      r,
+		Handler:      corshandler,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}
+
 	r.HandleFunc("POST /register", controller.CreateUser)
 	r.HandleFunc("/login", controller.Login)
-	r.HandleFunc("/update", controller.Update)
-	r.HandleFunc("/delete", controller.Delete)
 	s.ListenAndServe()
 }

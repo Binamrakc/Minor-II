@@ -41,5 +41,5 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		"message": "Login Successfully",
 		"Token":   "JWT Generated",
 	}
-	json.NewEncoder()
+	json.NewEncoder(w).Encode(&response)
 }
