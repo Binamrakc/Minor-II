@@ -43,11 +43,11 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to secure password", http.StatusInternalServerError)
 		return
 	}
-	result := "insert into register(name,address,email,password,phone,age,created_at) values (?,?,?,?,?,?,?)"
+	result := "insert into register(name,address,email,password,phone,age) values (?,?,?,?,?,?)"
 
-	_, err = intializer.DB.Exec(result, input.Name, input.Address, input.Email, string(hashedpassword), input.Phone, input.Age, input.Date)
+	_, err = intializer.DB.Exec(result, input.Name, input.Address, input.Email, string(hashedpassword), input.Phone, input.Age)
 	if err != nil {
-		http.Error(w, "failed to store information", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)

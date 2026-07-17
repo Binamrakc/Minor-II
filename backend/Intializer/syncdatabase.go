@@ -6,18 +6,16 @@ import (
 
 func User() {
 
-	_, _ = DB.Exec("DROP TABLE IF EXISTS register;")
-
 	Register := `
 		create table if not exists register(
-		Id serial primary key,
+		Id int AUTO_INCREMENT primary key,
 		name varchar(55) not null,
 		email varchar(55) unique,
 		Password varchar(255) not null,
 		address varchar(55) not null,
 		phone integer not null,
 		age integer not null,
-		created_at Date not null
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		 );`
 	_, err := DB.Exec(Register)
 	if err != nil {

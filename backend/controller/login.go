@@ -11,7 +11,7 @@ import (
 
 func Login(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method != http.MethodGet {
+	if r.Method != http.MethodPost {
 		http.Error(w, "invalid method", http.StatusUnauthorized)
 		return
 	}
@@ -29,12 +29,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	err = intializer.DB.QueryRow(result, login.Email).Scan(&id, &storeshash)
 	if err != nil {
-		http.Error(w, `{"message":"invalid email or password"}`, http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(storeshash), []byte(login.Password))
 	if err != nil {
-		http.Error(w, `{"message":"invalid email or password"}`, http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 	response := map[string]string{
