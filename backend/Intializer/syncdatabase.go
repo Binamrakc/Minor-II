@@ -48,5 +48,18 @@ func User() {
 	} else {
 		log.Println("Listing table created")
 	}
+	Contact :=
+		`create table if not exists contact(
+	id int auto_increament primary key,
+	email varchar(255) not null,
+	phone varchar(22) not noll,
+	description text 
+	);`
+	_, err = DB.Exec(Contact)
+	if err != nil {
+		log.Fatal("failed to created table")
+	} else {
+		log.Println("contact table created successfully")
+	}
 	log.Printf("table execute sucessfully")
 }
