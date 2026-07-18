@@ -5,7 +5,10 @@ import (
 	intializer "mis/Intializer"
 	"mis/model"
 	"net/http"
+	"os"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -37,9 +40,28 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	response := map[string]string{
-		"message": "Login Successfully",
-		"Token":   "JWT Generated",
+	tokenstring, err := JWT(login.Email)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
 	}
-	json.NewEncoder(w).Encode(&response)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Login Successfully",
+		"Token":   tokenstring,
+	})
+}
+
+func JWT(email string) (string, error) {
+
+	claims := jwt.MapClaims{
+		"email": email,
+		"exp":   time.Now().Add(time.Hour * 24).Unix(),
+	}
+	secret := os.Getenv("JWT_TOKEN")
+	if secret == "" {
+		secret = "dafault_secret"
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secret))
 }
