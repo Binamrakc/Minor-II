@@ -2,6 +2,7 @@ package main
 
 import (
 	intializer "mis/Intializer"
+	middleware "mis/Middleware"
 
 	"mis/controller"
 	"net/http"
@@ -35,6 +36,6 @@ func main() {
 
 	r.HandleFunc("POST /register", controller.CreateUser)
 	r.HandleFunc("POST /login", controller.Login)
-	r.HandleFunc("POST /createevent", controller.CreateEvent)
+	r.HandleFunc("POST /createevent", middleware.Jwtmiddleware(controller.CreateEvent))
 	s.ListenAndServe()
 }
