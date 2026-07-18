@@ -35,5 +35,6 @@ func main() {
 
 	r.HandleFunc("POST /register", controller.CreateUser)
 	r.HandleFunc("POST /login", controller.Login)
+	r.HandleFunc("POST /createevent", controller.CreateEvent)
 	s.ListenAndServe()
 }
