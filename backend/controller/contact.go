@@ -18,7 +18,7 @@ func Contact(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid data fields", http.StatusBadRequest)
 		return
 	}
-	query := "insert into contact(id,email,phone ,description)values(?,?,?,?)"
+	query := "insert into contact(email,phone ,description)values(?,?,?,?)"
 
 	_, err = intializer.DB.Exec(query, contact.Id, contact.Email, contact.Phone, contact.Description)
 	if err != nil {
@@ -36,7 +36,7 @@ func Getequiry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := "select * from contact"
+	query := "SELECT id, email, phone, description, created_at FROM contact"
 	rows, err := intializer.DB.Query(query)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -44,7 +44,7 @@ func Getequiry(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var inquiry []model.Contact
+	inquiry := []model.Contact{}
 	for rows.Next() {
 		var c model.Contact
 		err := rows.Scan(&c.Id, &c.Email, &c.Phone, &c.Description, &c.Created_at)
@@ -58,7 +58,7 @@ func Getequiry(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 
 	err = json.NewEncoder(w).Encode(inquiry)
