@@ -16,6 +16,7 @@ func CreateEvent(w http.ResponseWriter, r *http.Request) {
 	Useremail, ok := r.Context().Value(middleware.UserEmailKey).(string)
 	if !ok {
 		http.Error(w, "Need to login", http.StatusUnauthorized)
+		return
 	}
 	var event model.Listing
 

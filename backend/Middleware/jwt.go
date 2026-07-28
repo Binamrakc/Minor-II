@@ -13,8 +13,8 @@ import (
 func Jwtmiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
-		type contextKey string
 
+		type contextKey string
 		const UserEmailKey contextKey = "userEmail"
 
 		authheader := r.Header.Get("authorization")
