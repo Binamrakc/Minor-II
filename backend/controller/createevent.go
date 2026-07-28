@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	intializer "mis/Intializer"
 	middleware "mis/Middleware"
 	"mis/model"
@@ -10,7 +11,7 @@ import (
 
 func CreateEvent(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "unauthorized Methid!!", http.StatusUnauthorized)
+		http.Error(w, "unauthorized Method!!", http.StatusUnauthorized)
 		return
 	}
 	Useremail, ok := r.Context().Value(middleware.UserEmailKey).(string)
@@ -35,4 +36,39 @@ func CreateEvent(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(`{"message":"successfully created"` + Useremail + `"}`))
+}
+
+func UpdateEvent(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodPut {
+		http.Error(w, "Invalid request!", http.StatusUnauthorized)
+		return
+	}
+	Useremail, ok := r.Context().Value(middleware.UserEmailKey).(string)
+	if !ok {
+		http.Error(w, "Need to login", http.StatusUnauthorized)
+		return
+	}
+	var update model.Listing
+	err := json.NewDecoder(r.Body).Decode(&update)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	result := "update  property set Title=?,Description=?,Property_type=?,Price=?,Listing_type=?,Property_Status=?,Status=?,address=?,city=? where id=?"
+	res, err := intializer.DB.Exec(result, update.Title, update.Description, update.PropertyType, update.Price, update.ListingType, update.PropertyStatus, update.Status, update.Address, update.City, update.Id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	rowsaffected, err := res.RowsAffected()
+	if rowsaffected == 0 {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	responseJSON := fmt.Sprintf(`{"message":"Event updated successfully by %s"}`, Useremail)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusAlreadyReported)
+	w.Write([]byte(responseJSON))
 }
