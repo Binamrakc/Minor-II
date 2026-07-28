@@ -15,7 +15,8 @@ func User() {
 		address varchar(55) not null,
 		phone integer not null,
 		age integer not null,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		Status Enum('user','seller','admin') default 'user'
 		 );`
 	_, err := DB.Exec(Register)
 	if err != nil {
@@ -50,14 +51,15 @@ func User() {
 	}
 	Contact :=
 		`create table if not exists contact(
-	id int auto_increament primary key,
+	id int auto_increment primary key,
 	email varchar(255) not null,
-	phone varchar(22) not noll,
-	description text 
+	phone varchar(22) not null,
+	description text,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`
 	_, err = DB.Exec(Contact)
 	if err != nil {
-		log.Fatal("failed to created table")
+		log.Fatal("failed to create table")
 	} else {
 		log.Println("contact table created successfully")
 	}

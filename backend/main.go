@@ -37,5 +37,6 @@ func main() {
 	r.HandleFunc("POST /register", controller.CreateUser)
 	r.HandleFunc("POST /login", controller.Login)
 	r.HandleFunc("POST /createevent", middleware.Jwtmiddleware(controller.CreateEvent))
+	r.HandleFunc("POST /contact", controller.Contact)
 	s.ListenAndServe()
 }

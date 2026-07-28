@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,6 +13,9 @@ import (
 func Jwtmiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
+		type contextKey string
+
+		const UserEmailKey contextKey = "userEmail"
 
 		authheader := r.Header.Get("authorization")
 		if authheader == "" {
@@ -38,6 +42,12 @@ func Jwtmiddleware(next http.HandlerFunc) http.HandlerFunc {
 		if err != nil || !token.Valid {
 			http.Error(w, `{"message":"invalid token"}`, http.StatusUnauthorized)
 			return
+		}
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			if email, ok := claims["email"].(string); ok {
+				ctx := context.WithValue(r.Context(), UserEmailKey, email)
+				r = r.WithContext(ctx)
+			}
 		}
 		next(w, r)
 	}

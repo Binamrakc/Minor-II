@@ -1,8 +1,11 @@
 package model
 
+import "time"
+
 type Contact struct {
-	id          int    `json:"id"`
-	email       string `json:"email"`
-	phone       string `json:"email"`
-	description string `json:"description"`
+	Id          int       `json:"id"`
+	Email       string    `json:"email"`
+	Phone       string    `json:"phone"`
+	Description string    `json:"description"`
+	Created_at  time.Time `json:"time"`
 }

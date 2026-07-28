@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	intializer "mis/Intializer"
+	middleware "mis/Middleware"
 	"mis/model"
 	"net/http"
 )
@@ -11,6 +12,10 @@ func CreateEvent(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "unauthorized Methid!!", http.StatusUnauthorized)
 		return
+	}
+	Useremail, ok := r.Context().Value(middleware.UserEmailKey).(string)
+	if !ok {
+		http.Error(w, "Need to login", http.StatusUnauthorized)
 	}
 	var event model.Listing
 
@@ -26,6 +31,7 @@ func CreateEvent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("sucessfully Created"))
+	w.Write([]byte(`{"message":"successfully created"` + Useremail + `"}`))
 }
