@@ -84,6 +84,11 @@ func DeleteEvent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Need to login", http.StatusUnauthorized)
 		return
 	}
+	userRole, _ := r.Context().Value(middleware.UserRoleKey).(string)
+	if userRole != "seller" && userRole != "admin" {
+		http.Error(w, `{"message":"Forbidden: Only sellers and admins can delete events"}`, http.StatusForbidden)
+		return
+	}
 	var delete model.Listing
 	err := json.NewDecoder(r.Body).Decode(&delete)
 	if err != nil {

@@ -12,6 +12,7 @@ import (
 
 type contextKey string
 
+const UserRoleKey contextKey = "userRole"
 const UserEmailKey contextKey = "userEmail"
 
 func Jwtmiddleware(next http.HandlerFunc) http.HandlerFunc {
@@ -45,11 +46,17 @@ func Jwtmiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			ctx := r.Context()
+
 			if email, ok := claims["email"].(string); ok {
-				ctx := context.WithValue(r.Context(), UserEmailKey, email)
-				r = r.WithContext(ctx)
+				ctx = context.WithValue(ctx, UserEmailKey, email)
 			}
+			if role, ok := claims["role"].(string); ok {
+				ctx = context.WithValue(ctx, UserRoleKey, role)
+			}
+			r = r.WithContext(ctx) //
 		}
+
 		next(w, r)
 	}
 }
