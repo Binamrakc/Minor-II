@@ -72,3 +72,42 @@ func UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAlreadyReported)
 	w.Write([]byte(responseJSON))
 }
+
+func DeleteEvent(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Invalid Request !", http.StatusUnauthorized)
+		return
+	}
+	Useremail, ok := r.Context().Value(middleware.UserEmailKey).(string)
+	if !ok {
+		http.Error(w, "Need to login", http.StatusUnauthorized)
+		return
+	}
+	var delete model.Listing
+	err := json.NewDecoder(r.Body).Decode(&delete)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	query := "delete from property where id=? "
+	res, err := intializer.DB.Exec(query, delete.Id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	rowsaffected, err := res.RowsAffected()
+	if rowsaffected == 0 {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	responseJSON := fmt.Sprintf(`{"message":"Event deleted successfully by %s"}`, Useremail)
+
+	w.Header().Set("Content-type", "application")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(responseJSON))
+}
