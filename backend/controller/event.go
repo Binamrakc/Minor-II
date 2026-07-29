@@ -26,7 +26,7 @@ func CreateEvent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid data fields", http.StatusBadRequest)
 		return
 	}
-	query := "insert into property (id,Title,Description,Property_type,Price,Listing_type,Property_Status,Status,address,city)values(?,?,?,?,?,?,?,?,?,?)"
+	query := `insert into property (id,Title,Description,Property_type,Price,Listing_type,Property_Status,Status,address,city)values(?,?,?,?,?,?,?,?,?,?)`
 
 	_, err = intializer.DB.Exec(query, event.Id, event.Title, event.Description, event.PropertyType, event.Price, event.ListingType, event.PropertyStatus, event.Status, event.Address, event.City)
 	if err != nil {
@@ -55,7 +55,7 @@ func UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	result := "update  property set Title=?,Description=?,Property_type=?,Price=?,Listing_type=?,Property_Status=?,Status=?,address=?,city=? where id=?"
+	result := `update  property set Title=?,Description=?,Property_type=?,Price=?,Listing_type=?,Property_Status=?,Status=?,address=?,city=? where id=?`
 	res, err := intializer.DB.Exec(result, update.Title, update.Description, update.PropertyType, update.Price, update.ListingType, update.PropertyStatus, update.Status, update.Address, update.City, update.Id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -95,18 +95,18 @@ func DeleteEvent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	query := "delete from property where id=? "
+	query := `delete from property where id=? `
 	res, err := intializer.DB.Exec(query, delete.Id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	rowsaffected, err := res.RowsAffected()
-	if rowsaffected == 0 {
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if err != nil {
+	if rowsaffected == 0 {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
