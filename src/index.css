@@ -1,3 +1,21 @@
+:root {
+  --bg: #f8f9fa;
+  --surface: #ffffff;
+  --text: #212529;
+  --muted: #6c757d;
+  --card: #ffffff;
+  --border: #dee2e6;
+}
+
+[data-theme="dark"] {
+  --bg: #121212;
+  --surface: #1e1e1e;
+  --text: #f1f1f1;
+  --muted: #a0a0a0;
+  --card: #1b1b1b;
+  --border: #2c2c2c;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,8 +23,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  
-  /* Smooth transitions when shifting between modes */
+  background-color: var(--bg);
+  color: var(--text);
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
@@ -19,9 +37,72 @@ code {
   Force Bootstrap elements to adapt to your dark mode state dynamically 
   by targeting the state we pass down.
 */
-[data-theme="dark"] {
-  background-color: #121212 !important;
+[data-theme="dark"] .card,
+[data-theme="dark"] .navbar,
+[data-theme="dark"] table,
+[data-theme="dark"] .list-group-item,
+[data-theme="dark"] .dropdown-menu,
+[data-theme="dark"] .modal-content {
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select,
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+  background-color: #2b2b2b !important;
   color: #ffffff !important;
+  border-color: #444444 !important;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: #888888 !important;
+}
+
+[data-theme="dark"] .bg-white,
+[data-theme="dark"] .bg-light,
+[data-theme="dark"] .bg-transparent {
+  background-color: var(--surface) !important;
+}
+
+[data-theme="dark"] .navbar,
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-body,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .dropdown-menu,
+[data-theme="dark"] .list-group-item,
+[data-theme="dark"] .table,
+[data-theme="dark"] .alert {
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme="dark"] .text-dark {
+  color: #f1f1f1 !important;
+}
+
+[data-theme="dark"] .btn-dark {
+  background-color: #353535 !important;
+  border-color: #444444 !important;
+  color: #f1f1f1 !important;
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6,
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] small {
+  color: #e0e0e0 !important;
 }
 
 /* Dynamically fix standard Bootstrap cards and layout layers in Dark Mode */

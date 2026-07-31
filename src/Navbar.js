@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 
-function Navbar() {
+function Navbar({ isDarkMode }) {
   const navigate = useNavigate();
   
   // State elements mapped directly to your DB INDEX columns
@@ -29,8 +29,10 @@ function Navbar() {
     navigate(`/?${queryParams.toString()}`);
   };
 
+  const navClass = `navbar navbar-expand-lg ${isDarkMode ? 'navbar-dark bg-dark' : 'navbar-light bg-white'} border-bottom py-3 px-4 shadow-sm custom-navbar-wrapper`;
+
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom py-3 px-4 shadow-sm custom-navbar-wrapper">
+    <nav className={navClass} style={{ transition: 'background-color 0.2s ease, color 0.2s ease' }}>
       <div className="container-fluid px-0">
         
         {/* Brand Container with Logo and requested "GharBasai" text */}
@@ -41,7 +43,7 @@ function Navbar() {
             style={{ 
               fontSize: "1.1rem", 
               letterSpacing: "-0.3px",
-              color: "#000000" 
+              color: isDarkMode ? "#ffffff" : "#000000" 
             }}
           >
             GharBasai

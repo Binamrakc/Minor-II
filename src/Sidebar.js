@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-function Sidebar() {
+function Sidebar({ isDarkMode, setIsDarkMode }) {
   const location = useLocation();
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false); // Handles desktop collapsed state
   const [mobileOpen, setMobileOpen] = useState(false);   // Handles mobile open state
 

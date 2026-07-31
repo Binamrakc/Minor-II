@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route } from "react-router-dom";
 import Contact from './Contact.js';
 import Dashboard from './Dashboard.js';
@@ -17,12 +17,17 @@ import AIChatbox from './Chatbox.js';
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = isDarkMode ? "dark" : "light";
+    document.body.dataset.theme = isDarkMode ? "dark" : "light";
+  }, [isDarkMode]);
+
   return (
     <div 
-      className="d-flex flex-column min-vh-100"
+      className="d-flex flex-column min-vh-100 app-root"
       style={{ 
-        backgroundColor: isDarkMode ? "#121212" : "#f8f9fa",
-        color: isDarkMode ? "#ffffff" : "#212529",
+        backgroundColor: "var(--bg)",
+        color: "var(--text)",
         transition: "background-color 0.2s ease, color 0.2s ease" 
       }}
     >
@@ -40,9 +45,9 @@ function App() {
         <div 
           className="flex-grow-1 w-100 p-3 p-md-4 pt-5 pt-lg-4 overflow-x-hidden"
           style={{ 
-            backgroundColor: isDarkMode ? "#121212" : "#f8f9fa",
-            color: isDarkMode ? "#ffffff" : "#212529",
-            transition: "background-color 0.2s ease"
+            backgroundColor: "var(--bg)",
+            color: "var(--text)",
+            transition: "background-color 0.2s ease, color 0.2s ease"
           }}
         >
           <Routes>
