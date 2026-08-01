@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	intializer "mis/Intializer"
+	middleware "mis/Middleware"
 	"mis/model"
 	"net/http"
 )
@@ -46,9 +47,13 @@ func Adminapprove(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid Request", http.StatusMethodNotAllowed)
 		return
 	}
-
+	userRole, _ := r.Context().Value(middleware.UserRoleKey).(string)
+	if userRole != "admin" {
+		http.Error(w, `{"message":"Forbidden: Admin access required"}`, http.StatusForbidden)
+		return
+	}
 	query := `select id,Title,Description,Property_type,Price,Listing_type,Property_Status,Status,address,city
-				from property where Status='approved'`
+				from property where Status='pending'`
 	rows, err := intializer.DB.Query(query)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

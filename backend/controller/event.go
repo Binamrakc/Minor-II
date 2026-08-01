@@ -107,7 +107,7 @@ func DeleteEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if rowsaffected == 0 {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "event not found", http.StatusInternalServerError)
 		return
 	}
 	responseJSON := fmt.Sprintf(`{"message":"Event deleted successfully by %s"}`, Useremail)
