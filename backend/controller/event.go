@@ -11,7 +11,7 @@ import (
 
 func CreateEvent(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "unauthorized Method!!", http.StatusUnauthorized)
+		http.Error(w, "unauthorized Method!!", http.StatusMethodNotAllowed)
 		return
 	}
 	Useremail, ok := r.Context().Value(middleware.UserEmailKey).(string)
@@ -41,7 +41,7 @@ func CreateEvent(w http.ResponseWriter, r *http.Request) {
 func UpdateEvent(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPut {
-		http.Error(w, "Invalid request!", http.StatusUnauthorized)
+		http.Error(w, "Invalid request!", http.StatusMethodNotAllowed)
 		return
 	}
 	Useremail, ok := r.Context().Value(middleware.UserEmailKey).(string)
@@ -81,7 +81,7 @@ func DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	}
 	Useremail, ok := r.Context().Value(middleware.UserEmailKey).(string)
 	if !ok {
-		http.Error(w, "Need to login", http.StatusUnauthorized)
+		http.Error(w, "Need to login", http.StatusMethodNotAllowed)
 		return
 	}
 	userRole, _ := r.Context().Value(middleware.UserRoleKey).(string)
