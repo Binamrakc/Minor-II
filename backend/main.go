@@ -43,6 +43,11 @@ func main() {
 	r.HandleFunc("POST /contact", controller.Contact)
 	r.HandleFunc("GET/Dashboard", controller.GetDashboard)
 	r.HandleFunc("GET/AdminReview", middleware.Jwtmiddleware(controller.Adminapprove))
+	r.HandleFunc("PUT /admin/review", middleware.Jwtmiddleware(controller.ReviewEvent))
+	r.HandleFunc("GET/users", middleware.Jwtmiddleware(controller.Getusers))
+	r.HandleFunc("PUT/updateusers", middleware.Jwtmiddleware(controller.Updateuser))
+	r.HandleFunc("DELETE/Deleteuser", middleware.Jwtmiddleware(controller.Deleteuser))
+	r.HandleFunc("DELETE?Deleteownid", middleware.Jwtmiddleware(controller.Deleteownid))
 
 	s.ListenAndServe()
 }

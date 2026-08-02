@@ -151,3 +151,27 @@ func Deleteownid(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message":"Your account has been deleted successfully"}`))
 }
+
+func Getprofile(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Invalid Method!!", http.StatusMethodNotAllowed)
+		return
+	}
+	userEmail, ok := r.Context().Value(middleware.UserEmailKey).(string)
+	if !ok || userEmail == "" {
+		http.Error(w, `{"message":"Unauthorized: Please log in"}`, http.StatusUnauthorized)
+		return
+	}
+
+	query := `select name,phone,email,address from register where email=?`
+
+	var profile model.Registerinput
+	err := intializer.DB.QueryRow(query, userEmail).Scan(&profile.Name, &profile.Phone, &profile.Email, &profile.Address)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(profile)
+}
