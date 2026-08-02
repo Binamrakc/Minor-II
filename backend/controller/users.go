@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	intializer "mis/Intializer"
 	middleware "mis/Middleware"
 	"mis/model"
@@ -40,4 +41,90 @@ func Getusers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(users)
+}
+
+func Updateuser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Unauthorized acess!", http.StatusMethodNotAllowed)
+		return
+	}
+	userRole, _ := r.Context().Value(middleware.UserRoleKey).(string)
+	if userRole != "admin" {
+		http.Error(w, `{"message":"Forbidden: Admin access required"}`, http.StatusForbidden)
+		return
+	}
+	query := `update name,address,phone,age from register where id=? and email=?`
+}
+
+func Deleteuser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Invalid Method!", http.StatusMethodNotAllowed)
+		return
+	}
+	Useremail, ok := r.Context().Value(middleware.UserEmailKey).(string)
+	if !ok {
+		http.Error(w, "Need to login", http.StatusUnauthorized)
+		return
+	}
+	userRole, _ := r.Context().Value(middleware.UserRoleKey).(string)
+	if userRole != "admin" {
+		http.Error(w, `{"message":"Forbidden: Admin access required"}`, http.StatusForbidden)
+		return
+	}
+	var delete model.Registerinput
+	err := json.NewDecoder(r.Body).Decode(&delete)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	query := `delete from register where id=?`
+	res, err := intializer.DB.Exec(query, delete.Id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	rowsaffected, err := res.RowsAffected()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if rowsaffected == 0 {
+		http.Error(w, "event not found", http.StatusNotFound)
+		return
+	}
+	responseJSON := fmt.Sprintf(`{"message":"Event deleted successfully by %s"}`, Useremail)
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(responseJSON))
+}
+
+func Deleteownid(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Invalid method!!", http.StatusUnauthorized)
+		return
+	}
+	userEmail, ok := r.Context().Value(middleware.UserEmailKey).(string)
+	if !ok || userEmail == "" {
+		http.Error(w, `{"message":"Unauthorized: Please log in"}`, http.StatusUnauthorized)
+		return
+	}
+	query := `delete from register where email=?`
+	res, err := intializer.DB.Exec(query, userEmail)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	rowsaffected, err := res.RowsAffected()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if rowsaffected == 0 {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message":"Your account has been deleted successfully"}`))
 }
