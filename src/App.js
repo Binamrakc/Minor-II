@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Contact from './Contact.js';
 import Dashboard from './Dashboard.js';
 import Navbar from './Navbar.js';
@@ -16,6 +16,8 @@ import AIChatbox from './Chatbox.js';
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const isAdmin = storedUser?.role === "admin" || storedUser?.role === "owner";
 
   useEffect(() => {
     document.documentElement.dataset.theme = isDarkMode ? "dark" : "light";
@@ -36,7 +38,7 @@ function App() {
 
       <div className="d-flex flex-grow-1 position-relative">
         
-        <Sidebar isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
+        <Sidebar isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} isAdmin={isAdmin} />
 
         {/* 
           This route body pane forces background changes explicitly 
@@ -53,9 +55,9 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard isDarkMode={isDarkMode} />} />
             <Route path="/contact" element={<Contact isDarkMode={isDarkMode} />} />
-            <Route path="/users" element={<Users isDarkMode={isDarkMode} />} />
+            <Route path="/users" element={isAdmin ? <Users isDarkMode={isDarkMode} /> : <Navigate to="/" replace />} />
             <Route path="/CreateEvent" element={<CreateEvent isDarkMode={isDarkMode} />} />
-            <Route path="/AdminReview" element={<AdminReview isDarkMode={isDarkMode} />} />
+            <Route path="/AdminReview" element={isAdmin ? <AdminReview isDarkMode={isDarkMode} /> : <Navigate to="/" replace />} />
             <Route path="/login" element={<AuthPage isDarkMode={isDarkMode} />} />
             <Route path="/register" element={<RegisterPage isDarkMode={isDarkMode} />} />
             <Route path="/setting" element={<AppSettings isDarkMode={isDarkMode} />} />

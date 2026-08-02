@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-function Sidebar({ isDarkMode, setIsDarkMode }) {
+function Sidebar({ isDarkMode, setIsDarkMode, isAdmin }) {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false); // Handles desktop collapsed state
   const [mobileOpen, setMobileOpen] = useState(false);   // Handles mobile open state
@@ -127,9 +127,11 @@ function Sidebar({ isDarkMode, setIsDarkMode }) {
             {[
               { path: "/", label: "Dashboard", icon: "house" },
               { path: "/contact", label: "Contact Us", icon: "telephone" },
-              { path: "/users", label: "Users", icon: "person" },
               { path: "/CreateEvent", label: "Create Event", icon: "plus-circle" },
-              { path: "/AdminReview", label: "Admin Review", icon: "shield-check" },
+              ...(isAdmin ? [
+                { path: "/users", label: "Users", icon: "person" },
+                { path: "/AdminReview", label: "Admin Review", icon: "shield-check" },
+              ] : []),
               { path: "/Setting", label: "Settings", icon: "gear" },
             ].map((item) => {
               const active = isActive(item.path);

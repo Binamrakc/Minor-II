@@ -1,18 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 
 function CreateEvent() {
-  // Configured state variables to strictly match your SQL table definitions
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    propertytype: "apartment", // Enum Default
+    propertytype: "apartment",
     price: "",
-    listingtype: "sale",       // Enum Default
+    listingtype: "sale",
     address: "",
     city: ""
   });
 
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [status, setStatus] = useState({ type: "", msg: "" });
+  const fileInputRef = useRef(null);
 
   const handleChange = (e) => {
     setFormData({
@@ -21,24 +23,61 @@ function CreateEvent() {
     });
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Basic validation
+    if (!file.type.startsWith("image/")) {
+      setStatus({ type: "danger", msg: "Please select a valid image file." });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setStatus({ type: "danger", msg: "Image must be smaller than 5MB." });
+      return;
+    }
+
+    // Clean up previous preview URL before creating a new one
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setStatus({ type: "", msg: "" });
+  };
+
+  const handleRemoveImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus({ type: "", msg: "" });
 
-    // Payload transformation to match required database data types
-    const payload = {
-      ...formData,
-      price: parseInt(formData.price, 10)
-    };
+    // Build multipart form data so the image can travel with the rest of the fields
+    const payload = new FormData();
+    payload.append("title", formData.title);
+    payload.append("description", formData.description);
+    payload.append("propertytype", formData.propertytype);
+    payload.append("price", parseInt(formData.price, 10));
+    payload.append("listingtype", formData.listingtype);
+    payload.append("address", formData.address);
+    payload.append("city", formData.city);
+    if (imageFile) {
+      payload.append("image", imageFile);
+    }
 
     try {
       const res = await fetch("http://localhost:8080/events", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          // Do NOT set Content-Type manually here — the browser sets the
+          // correct multipart/form-data boundary automatically for FormData.
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(payload),
+        body: payload,
       });
 
       if (!res.ok) throw new Error("Failed to save property entry.");
@@ -48,7 +87,6 @@ function CreateEvent() {
         msg: "Property listed for approval successfully!"
       });
 
-      // Clear layout fields cleanly
       setFormData({
         title: "",
         description: "",
@@ -58,6 +96,7 @@ function CreateEvent() {
         address: "",
         city: ""
       });
+      handleRemoveImage();
 
     } catch (err) {
       console.error(err);
@@ -91,7 +130,6 @@ function CreateEvent() {
           }}
         >
           <div className="text-center p-4 z-2">
-            {/* SVG Visual Node representation */}
             <svg width="240" height="200" viewBox="0 0 200 180" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-4">
               <circle cx="100" cy="90" r="70" fill="rgba(94, 23, 235, 0.06)" />
               <rect x="50" y="45" width="100" height="90" rx="12" fill="#ffffff" className="shadow-sm" stroke="#e2dcff" strokeWidth="2"/>
@@ -121,6 +159,68 @@ function CreateEvent() {
             )}
 
             <form onSubmit={handleSubmit}>
+
+              {/* Image Upload Section */}
+              <div className="mb-3">
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  style={{ display: "none" }}
+                  id="propertyImageInput"
+                />
+
+                {!imagePreview ? (
+                  <label
+                    htmlFor="propertyImageInput"
+                    className="d-flex flex-column align-items-center justify-content-center w-100"
+                    style={{
+                      border: "1.5px dashed #cbd5e1",
+                      borderRadius: "12px",
+                      padding: "20px",
+                      cursor: "pointer",
+                      color: "#94a3b8",
+                      fontSize: "0.85rem"
+                    }}
+                  >
+                    <i className="bi bi-image me-2" style={{ fontSize: "1.4rem", color: "#5c62ec" }}></i>
+                    Click to upload property photo
+                  </label>
+                ) : (
+                  <div className="position-relative" style={{ width: "fit-content" }}>
+                    <img
+                      src={imagePreview}
+                      alt="Property preview"
+                      style={{
+                        width: "100%",
+                        maxHeight: "160px",
+                        objectFit: "cover",
+                        borderRadius: "12px",
+                        border: "1px solid #e2e8f0"
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="btn btn-sm position-absolute"
+                      style={{
+                        top: "6px",
+                        right: "6px",
+                        backgroundColor: "rgba(0,0,0,0.6)",
+                        color: "#fff",
+                        borderRadius: "50%",
+                        width: "26px",
+                        height: "26px",
+                        padding: 0,
+                        lineHeight: "1"
+                      }}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                )}
+              </div>
               
               <div className="mb-3">
                 <input
@@ -134,7 +234,6 @@ function CreateEvent() {
                 />
               </div>
 
-              {/* Selection Dropdown Rows for Schema Enums */}
               <div className="row mb-3 g-3">
                 <div className="col-6">
                   <select
@@ -177,7 +276,6 @@ function CreateEvent() {
                 />
               </div>
 
-              {/* Address Columns Row */}
               <div className="row mb-3 g-3">
                 <div className="col-7">
                   <input
@@ -215,7 +313,6 @@ function CreateEvent() {
                 />
               </div>
 
-              {/* Core Execution Button matching the purple mockup palette */}
               <button 
                 type="submit" 
                 className="btn w-100 text-white shadow-sm mt-2"
@@ -231,7 +328,6 @@ function CreateEvent() {
               </button>
             </form>
 
-            {/* Mobile App Downloads Layout row matching image */}
             <div className="d-flex gap-2 pt-4 border-top justify-content-start mt-4">
               <div className="btn btn-dark d-flex align-items-center bg-black border-0 px-3 py-1 opacity-70" style={{ borderRadius: "6px", cursor: "default" }}>
                 <i className="bi bi-apple me-2" style={{ fontSize: "1.2rem" }}></i>
@@ -254,7 +350,6 @@ function CreateEvent() {
 
       </div>
 
-      {/* Embedded style configurations for the borderless interface styling rules */}
       <style>{`
         .custom-underline-input {
           border: none !important;
@@ -277,7 +372,6 @@ function CreateEvent() {
           cursor: pointer;
           color: #4a5568 !important;
         }
-        /* Clearing browser spinning dial layouts on number parameters */
         .custom-underline-input[type=number]::-webkit-inner-spin-button, 
         .custom-underline-input[type=number]::-webkit-outer-spin-button { 
           -webkit-appearance: none; 
