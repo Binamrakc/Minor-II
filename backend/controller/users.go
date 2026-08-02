@@ -48,12 +48,35 @@ func Updateuser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized acess!", http.StatusMethodNotAllowed)
 		return
 	}
-	userRole, _ := r.Context().Value(middleware.UserRoleKey).(string)
-	if userRole != "admin" {
-		http.Error(w, `{"message":"Forbidden: Admin access required"}`, http.StatusForbidden)
+	userEmail, ok := r.Context().Value(middleware.UserEmailKey).(string)
+	if !ok || userEmail == "" {
+		http.Error(w, `{"message":"Unauthorized: Please log in"}`, http.StatusUnauthorized)
 		return
 	}
-	query := `update name,address,phone,age from register where id=? and email=?`
+	var update model.Registerinput
+	err := json.NewDecoder(r.Body).Decode(&update)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	query := `update register set name=?,address=?,phone=?,age=? where email=?`
+	res, err := intializer.DB.Exec(query, update.Name, update.Address, update.Phone, update.Age, userEmail)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	rowsaffected, err := res.RowsAffected()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if rowsaffected == 0 {
+		http.Error(w, `{"message":"Account not found"}`, http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message":"Your account has been updated successfully"}`))
 }
 
 func Deleteuser(w http.ResponseWriter, r *http.Request) {
@@ -121,7 +144,7 @@ func Deleteownid(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if rowsaffected == 0 {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(w, `{"message":"Account not found"}`, http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-type", "application/json")
