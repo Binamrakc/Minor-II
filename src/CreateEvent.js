@@ -1,5 +1,7 @@
 import React, { useState, useRef } from "react";
 
+const MAX_IMAGES = 4;
+
 function CreateEvent() {
   const [formData, setFormData] = useState({
     title: "",
@@ -11,8 +13,9 @@ function CreateEvent() {
     city: ""
   });
 
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  // Now arrays instead of single values, so multiple photos can be attached
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [status, setStatus] = useState({ type: "", msg: "" });
   const fileInputRef = useRef(null);
 
@@ -24,31 +27,61 @@ function CreateEvent() {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
 
-    // Basic validation
-    if (!file.type.startsWith("image/")) {
-      setStatus({ type: "danger", msg: "Please select a valid image file." });
+    // Respect the max photo limit, accounting for what's already selected
+    const remainingSlots = MAX_IMAGES - imageFiles.length;
+    if (remainingSlots <= 0) {
+      setStatus({ type: "danger", msg: `You can only upload up to ${MAX_IMAGES} photos.` });
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setStatus({ type: "danger", msg: "Image must be smaller than 5MB." });
-      return;
+
+    const filesToAdd = files.slice(0, remainingSlots);
+    const validFiles = [];
+    const validPreviews = [];
+
+    for (const file of filesToAdd) {
+      if (!file.type.startsWith("image/")) {
+        setStatus({ type: "danger", msg: "Please select valid image files only." });
+        continue;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setStatus({ type: "danger", msg: "Each image must be smaller than 5MB." });
+        continue;
+      }
+      validFiles.push(file);
+      validPreviews.push(URL.createObjectURL(file));
     }
 
-    // Clean up previous preview URL before creating a new one
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    if (validFiles.length) {
+      setImageFiles((prev) => [...prev, ...validFiles]);
+      setImagePreviews((prev) => [...prev, ...validPreviews]);
+      if (!status.type) setStatus({ type: "", msg: "" });
+    }
 
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-    setStatus({ type: "", msg: "" });
+    if (files.length > remainingSlots) {
+      setStatus({ type: "danger", msg: `Only ${MAX_IMAGES} photos allowed. Extra files were skipped.` });
+    }
+
+    // Reset the input so the same file can be re-selected later if removed
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleRemoveImage = () => {
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
-    setImageFile(null);
-    setImagePreview(null);
+  const handleRemoveImage = (index) => {
+    setImagePreviews((prev) => {
+      // Clean up the object URL for the removed preview
+      if (prev[index]) URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveAllImages = () => {
+    imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+    setImageFiles([]);
+    setImagePreviews([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -56,7 +89,7 @@ function CreateEvent() {
     e.preventDefault();
     setStatus({ type: "", msg: "" });
 
-    // Build multipart form data so the image can travel with the rest of the fields
+    // Build multipart form data so the images can travel with the rest of the fields
     const payload = new FormData();
     payload.append("title", formData.title);
     payload.append("description", formData.description);
@@ -65,9 +98,11 @@ function CreateEvent() {
     payload.append("listingtype", formData.listingtype);
     payload.append("address", formData.address);
     payload.append("city", formData.city);
-    if (imageFile) {
-      payload.append("image", imageFile);
-    }
+
+    // Append each image under the same field name so the backend receives an array
+    imageFiles.forEach((file) => {
+      payload.append("images", file);
+    });
 
     try {
       const res = await fetch("http://localhost:8080/events", {
@@ -96,7 +131,7 @@ function CreateEvent() {
         address: "",
         city: ""
       });
-      handleRemoveImage();
+      handleRemoveAllImages();
 
     } catch (err) {
       console.error(err);
@@ -160,18 +195,59 @@ function CreateEvent() {
 
             <form onSubmit={handleSubmit}>
 
-              {/* Image Upload Section */}
+              {/* Image Upload Section - now supports up to MAX_IMAGES photos */}
               <div className="mb-3">
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   ref={fileInputRef}
                   onChange={handleImageChange}
                   style={{ display: "none" }}
                   id="propertyImageInput"
+                  disabled={imageFiles.length >= MAX_IMAGES}
                 />
 
-                {!imagePreview ? (
+                {imagePreviews.length > 0 && (
+                  <div className="d-flex flex-wrap gap-2 mb-2">
+                    {imagePreviews.map((src, index) => (
+                      <div className="position-relative" key={src} style={{ width: "90px", height: "90px" }}>
+                        <img
+                          src={src}
+                          alt={`Property preview ${index + 1}`}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            borderRadius: "10px",
+                            border: "1px solid #e2e8f0"
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(index)}
+                          className="btn btn-sm position-absolute"
+                          style={{
+                            top: "4px",
+                            right: "4px",
+                            backgroundColor: "rgba(0,0,0,0.6)",
+                            color: "#fff",
+                            borderRadius: "50%",
+                            width: "22px",
+                            height: "22px",
+                            padding: 0,
+                            lineHeight: "1",
+                            fontSize: "0.8rem"
+                          }}
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {imageFiles.length < MAX_IMAGES && (
                   <label
                     htmlFor="propertyImageInput"
                     className="d-flex flex-column align-items-center justify-content-center w-100"
@@ -185,40 +261,10 @@ function CreateEvent() {
                     }}
                   >
                     <i className="bi bi-image me-2" style={{ fontSize: "1.4rem", color: "#5c62ec" }}></i>
-                    Click to upload property photo
+                    {imagePreviews.length === 0
+                      ? `Click to upload up to ${MAX_IMAGES} property photos`
+                      : `Add more (${MAX_IMAGES - imageFiles.length} left)`}
                   </label>
-                ) : (
-                  <div className="position-relative" style={{ width: "fit-content" }}>
-                    <img
-                      src={imagePreview}
-                      alt="Property preview"
-                      style={{
-                        width: "100%",
-                        maxHeight: "160px",
-                        objectFit: "cover",
-                        borderRadius: "12px",
-                        border: "1px solid #e2e8f0"
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="btn btn-sm position-absolute"
-                      style={{
-                        top: "6px",
-                        right: "6px",
-                        backgroundColor: "rgba(0,0,0,0.6)",
-                        color: "#fff",
-                        borderRadius: "50%",
-                        width: "26px",
-                        height: "26px",
-                        padding: 0,
-                        lineHeight: "1"
-                      }}
-                    >
-                      &times;
-                    </button>
-                  </div>
                 )}
               </div>
               
