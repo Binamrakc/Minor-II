@@ -163,10 +163,10 @@ func Getprofile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := `select name,phone,email,address from register where email=?`
+	query := `select name,phone,email,address,age from register where email=?`
 
 	var profile model.Registerinput
-	err := intializer.DB.QueryRow(query, userEmail).Scan(&profile.Name, &profile.Phone, &profile.Email, &profile.Address)
+	err := intializer.DB.QueryRow(query, userEmail).Scan(&profile.Name, &profile.Phone, &profile.Email, &profile.Address, &profile.Age)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
