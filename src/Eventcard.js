@@ -1,6 +1,8 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
-function EventCard({ image, title, description, category, date }) {
+function EventCard({ id, image, title, description, category, date }) {
+  const navigate = useNavigate();
   return (
     <div className="card shadow-sm border-0" style={{ maxWidth: "420px" }}>
       <img
@@ -24,7 +26,7 @@ function EventCard({ image, title, description, category, date }) {
           {description}
         </p>
 
-        <button className="btn btn-primary">
+        <button className="btn btn-primary" onClick={() => navigate(`/eventdetail/${id}`)}>
           View Details
         </button>
 

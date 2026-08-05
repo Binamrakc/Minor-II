@@ -1,25 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import EventCard from "./Eventcard.js";
+import events from "./eventData.js";
 
 function Dashboard() {
-  const [events] = useState([
-    {
-      id: 1,
-      title: "Sample Event 1",
-      description: "This is a dummy description for testing the frontend layout.",
-      category: "Workshop",
-      date: "2026-08-10",
-      image: ""
-    },
-    {
-      id: 2,
-      title: "Sample Event 2",
-      description: "Another sample description to display event card details properly.",
-      category: "Seminar",
-      date: "2026-08-15",
-      image: ""
-    }
-  ]);
+  const eventList = events;
 
   return (
     <div className="container py-4">
@@ -32,6 +16,7 @@ function Dashboard() {
           events.map((event) => (
             <div className="col-md-4" key={event.id}>
               <EventCard
+                id={event.id}
                 image={event.image ? event.image : "https://picsum.photos/500/300"}
                 title={event.title}
                 description={event.description}

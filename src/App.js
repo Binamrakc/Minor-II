@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import Contact from './Contact.js';
 import Dashboard from './Dashboard.js';
+import EventDescription from './eventdetail.js';
 import Navbar from './Navbar.js';
 import Sidebar from './Sidebar.js';
 import Users from './Users.js';
@@ -55,6 +56,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard isDarkMode={isDarkMode} />} />
             <Route path="/contact" element={<Contact isDarkMode={isDarkMode} />} />
+            <Route path="/eventdetail/:id" element={<EventDescription isDarkMode={isDarkMode} />} />
             <Route path="/users" element={isAdmin ? <Users isDarkMode={isDarkMode} /> : <Navigate to="/" replace />} />
             <Route path="/CreateEvent" element={<CreateEvent isDarkMode={isDarkMode} />} />
             <Route path="/AdminReview" element={isAdmin ? <AdminReview isDarkMode={isDarkMode} /> : <Navigate to="/" replace />} />
