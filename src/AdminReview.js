@@ -4,15 +4,26 @@ export default function AdminReview() {
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:8080/events")
+    const token = localStorage.getItem("token");
+
+    fetch("http://localhost:8080/events", {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    })
       .then(res => res.json())
-      .then(data => setEvents(data));
+      .then(data => {
+        const pending = Array.isArray(data)
+          ? data.filter(e => (e.status || "").toLowerCase() === "pending")
+          : [];
+        setEvents(pending);
+      });
   }, []);
 
   const handleApprove = async (id) => {
     await fetch(`http://localhost:8080/events/${id}/approve`, {
       method: "PUT",
-          headers: {
+      headers: {
         Authorization: "Bearer " + localStorage.getItem("token")
       }
     });
@@ -23,7 +34,7 @@ export default function AdminReview() {
   const handleReject = async (id) => {
     await fetch(`http://localhost:8080/admin/events/${id}`, {
       method: "DELETE",
-          headers: {
+      headers: {
         Authorization: "Bearer " + localStorage.getItem("token")
       }
     });
@@ -39,11 +50,11 @@ export default function AdminReview() {
         {events.map(event => (
           <div className="col-lg-4 mb-4" key={event.id}>
             <div className="card shadow-sm">
-                      <img
-                  src={`http://localhost:8080${event.image}`}
-                  className="card-img-top"
-                  alt=""
-                />
+              <img
+                src={`http://localhost:8080${event.image}`}
+                className="card-img-top"
+                alt=""
+              />
               <div className="card-body">
                 <span className="badge bg-warning text-dark">
                   {event.category}

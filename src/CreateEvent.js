@@ -13,7 +13,6 @@ function CreateEvent() {
     city: ""
   });
 
-  // Now arrays instead of single values, so multiple photos can be attached
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [status, setStatus] = useState({ type: "", msg: "" });
@@ -30,7 +29,6 @@ function CreateEvent() {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
-    // Respect the max photo limit, accounting for what's already selected
     const remainingSlots = MAX_IMAGES - imageFiles.length;
     if (remainingSlots <= 0) {
       setStatus({ type: "danger", msg: `You can only upload up to ${MAX_IMAGES} photos.` });
@@ -61,17 +59,11 @@ function CreateEvent() {
       if (!status.type) setStatus({ type: "", msg: "" });
     }
 
-    if (files.length > remainingSlots) {
-      setStatus({ type: "danger", msg: `Only ${MAX_IMAGES} photos allowed. Extra files were skipped.` });
-    }
-
-    // Reset the input so the same file can be re-selected later if removed
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleRemoveImage = (index) => {
     setImagePreviews((prev) => {
-      // Clean up the object URL for the removed preview
       if (prev[index]) URL.revokeObjectURL(prev[index]);
       return prev.filter((_, i) => i !== index);
     });
@@ -89,33 +81,42 @@ function CreateEvent() {
     e.preventDefault();
     setStatus({ type: "", msg: "" });
 
-    // Build multipart form data so the images can travel with the rest of the fields
-    const payload = new FormData();
-    payload.append("title", formData.title);
-    payload.append("description", formData.description);
-    payload.append("propertytype", formData.propertytype);
-    payload.append("price", parseInt(formData.price, 10));
-    payload.append("listingtype", formData.listingtype);
-    payload.append("address", formData.address);
-    payload.append("city", formData.city);
+    // Basic client-side guard so we don't even try an empty/broken submit
+    if (!imageFiles.length) {
+      // Remove this block if images are optional in your flow
+    }
 
-    // Append each image under the same field name so the backend receives an array
+    const fd = new FormData();
+    fd.append("title", formData.title);
+    fd.append("description", formData.description);
+    fd.append("propertytype", formData.propertytype);
+    fd.append("price", formData.price);
+    fd.append("listingtype", formData.listingtype);
+    fd.append("address", formData.address);
+    fd.append("city", formData.city);
+    fd.append("propertystatus", "available");
+    fd.append("status", "pending");
+
+    // Append the actual File objects (not the blob preview URLs)
     imageFiles.forEach((file) => {
-      payload.append("images", file);
+      fd.append("images", file);
     });
 
     try {
-      const res = await fetch("http://localhost:8080/events", {
+      const res = await fetch("http://localhost:8080/createevent", {
         method: "POST",
         headers: {
-          // Do NOT set Content-Type manually here — the browser sets the
-          // correct multipart/form-data boundary automatically for FormData.
+          // Do NOT set Content-Type manually — the browser must add the
+          // multipart boundary itself when the body is a FormData instance.
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: payload,
+        body: fd,
       });
 
-      if (!res.ok) throw new Error("Failed to save property entry.");
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || "Failed to save property entry.");
+      }
 
       setStatus({
         type: "success",
@@ -137,7 +138,7 @@ function CreateEvent() {
       console.error(err);
       setStatus({
         type: "danger",
-        msg: "Error saving property information to database."
+        msg: err.message || "Error saving property information to database."
       });
     }
   };
@@ -156,7 +157,7 @@ function CreateEvent() {
           minHeight: "660px"
         }}
       >
-        {/* Left Section: Illustration Context Layout Layer from Image Mockup */}
+        {/* Left Section */}
         <div 
           className="col-lg-6 d-none d-lg-flex flex-column align-items-center justify-content-center position-relative p-5"
           style={{ 
@@ -180,7 +181,7 @@ function CreateEvent() {
           <div className="position-absolute rounded shadow-sm opacity-50" style={{ width: "80px", height: "50px", background: "#e6e2ff", bottom: "12%", right: "8%", transform: "skewY(15deg)" }}></div>
         </div>
 
-        {/* Right Section: Form Management Layer */}
+        {/* Right Section: Form Management */}
         <div className="col-lg-6 p-4 p-md-5 d-flex flex-column justify-content-center bg-white">
           <div className="w-100 mx-auto" style={{ maxWidth: "420px" }}>
             
@@ -195,7 +196,7 @@ function CreateEvent() {
 
             <form onSubmit={handleSubmit}>
 
-              {/* Image Upload Section - now supports up to MAX_IMAGES photos */}
+              {/* Image Upload Section */}
               <div className="mb-3">
                 <input
                   type="file"
@@ -315,7 +316,7 @@ function CreateEvent() {
                   type="number"
                   name="price"
                   className="form-control custom-underline-input"
-                  placeholder="Price Amount (USD / NPR)"
+                  placeholder="Price Amount"
                   value={formData.price}
                   onChange={handleChange}
                   required
