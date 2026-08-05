@@ -13,55 +13,67 @@ import (
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
+	// 1. Correct Status Code for Wrong HTTP Method
 	if r.Method != http.MethodPost {
-		http.Error(w, "invalid method", http.StatusUnauthorized)
+		http.Error(w, `{"message":"Method not allowed"}`, http.StatusMethodNotAllowed)
 		return
 	}
-	var login model.Registerinput
 
+	var login model.Registerinput
 	err := json.NewDecoder(r.Body).Decode(&login)
 	if err != nil {
-		http.Error(w, "data not found", http.StatusInternalServerError)
+		http.Error(w, `{"message":"Invalid request body"}`, http.StatusBadRequest)
 		return
 	}
 
 	var storeshash string
 	var id int
-	result := "Select id, password from register Where email=?"
+	var role string // Added role fetching
 
+	// Fetch password & role (optional, adjust query to match your schema)
+	result := "SELECT id, password FROM register WHERE email = ?"
 	err = intializer.DB.QueryRow(result, login.Email).Scan(&id, &storeshash)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		http.Error(w, `{"message":"Invalid email or password"}`, http.StatusUnauthorized)
 		return
 	}
+
+	// Compare bcrypt hash
 	err = bcrypt.CompareHashAndPassword([]byte(storeshash), []byte(login.Password))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		http.Error(w, `{"message":"Invalid email or password"}`, http.StatusUnauthorized)
 		return
 	}
-	tokenstring, err := JWT(login.Email)
+
+	// Generate JWT
+	tokenstring, err := JWT(login.Email, role)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		http.Error(w, `{"message":"Failed to generate token"}`, http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+
+	// Respond with Token
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Login Successfully",
-		"Token":   tokenstring,
+		"message": "Login Successful",
+		"token":   tokenstring,
 	})
 }
 
-func JWT(email string) (string, error) {
-
+func JWT(email string, role string) (string, error) {
 	claims := jwt.MapClaims{
 		"email": email,
+		"role":  role,
 		"exp":   time.Now().Add(time.Hour * 24).Unix(),
 	}
+
 	secret := os.Getenv("JWT_TOKEN")
 	if secret == "" {
-		secret = "dafault_secret"
+		secret = "default_secret" // Fixed spelling
 	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
 }

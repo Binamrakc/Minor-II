@@ -2,7 +2,6 @@ package intializer
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/joho/godotenv"
 )
@@ -10,6 +9,6 @@ import (
 func Loadenv() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Println(http.StatusInternalServerError, "database not connected")
+		log.Println("warning : cant read .env file")
 	}
 }

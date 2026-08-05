@@ -38,6 +38,7 @@ func User() {
 	address VARCHAR(255) NOT NULL,
     city VARCHAR(100) NOT NULL,
 	Created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	image_url varchar(255),
 
 	INDEX idx_price(price),
 	INDEX idx_prop_add(address,city),

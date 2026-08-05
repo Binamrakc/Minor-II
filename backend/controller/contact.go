@@ -2,7 +2,9 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	intializer "mis/Intializer"
+	middleware "mis/Middleware"
 	"mis/model"
 	"net/http"
 )
@@ -10,6 +12,11 @@ import (
 func Contact(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Unauthorized Method", http.StatusUnauthorized)
+		return
+	}
+	Useremail, ok := r.Context().Value(middleware.UserEmailKey).(string)
+	if !ok {
+		http.Error(w, "Need to login", http.StatusUnauthorized)
 		return
 	}
 	var contact model.Contact
@@ -25,8 +32,9 @@ func Contact(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	responseJSON := fmt.Sprintf(`{"message":"Event updated successfully by %s"}`, Useremail)
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Enquiry sent"))
+	w.Write([]byte(responseJSON))
 }
 
 func Getequiry(w http.ResponseWriter, r *http.Request) {

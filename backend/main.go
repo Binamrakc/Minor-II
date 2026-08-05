@@ -18,6 +18,7 @@ func init() {
 }
 
 func main() {
+
 	r := http.NewServeMux()
 
 	c := cors.New(cors.Options{

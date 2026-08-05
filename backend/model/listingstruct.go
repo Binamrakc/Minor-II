@@ -14,4 +14,5 @@ type Listing struct {
 	Address        string    `json:"address"`
 	City           string    `json:"city"`
 	Created_at     time.Time `json:"date"`
+	Imageurl       string    `json:"image"`
 }
