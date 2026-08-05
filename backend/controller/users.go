@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	intializer "mis/Intializer"
@@ -153,25 +154,44 @@ func Deleteownid(w http.ResponseWriter, r *http.Request) {
 }
 
 func Getprofile(w http.ResponseWriter, r *http.Request) {
+	// Ensure correct HTTP Method
 	if r.Method != http.MethodGet {
-		http.Error(w, "Invalid Method!!", http.StatusMethodNotAllowed)
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	// 1. Retrieve logged-in user's email set by Jwtmiddleware
 	userEmail, ok := r.Context().Value(middleware.UserEmailKey).(string)
 	if !ok || userEmail == "" {
-		http.Error(w, `{"message":"Unauthorized: Please log in"}`, http.StatusUnauthorized)
+		http.Error(w, `{"message":"Unauthorized: Need to login"}`, http.StatusUnauthorized)
 		return
 	}
 
-	query := `select name,phone,email,address,age from register where email=?`
+	// 2. Query user details from the 'register' table using the email
+	var user UserProfile
+	query := `SELECT Id, name, email, address, phone, age, Status FROM register WHERE email = ?`
 
-	var profile model.Registerinput
-	err := intializer.DB.QueryRow(query, userEmail).Scan(&profile.Name, &profile.Phone, &profile.Email, &profile.Address, &profile.Age)
+	err := intializer.DB.QueryRow(query, userEmail).Scan(
+		&user.Id,
+		&user.Name,
+		&user.Email,
+		&user.Address,
+		&user.Phone,
+		&user.Age,
+		&user.Status,
+	)
+
 	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, `{"message":"User profile not found"}`, http.StatusNotFound)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-type", "application/json")
+
+	// 3. Send full user profile response as JSON
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(profile)
+	json.NewEncoder(w).Encode(user)
 }

@@ -26,24 +26,24 @@ func User() {
 	}
 
 	Listing := `
-	create table if not exists Property(
-	id int AUTO_INCREMENT primary key,
-	title varchar(100) not null,
-	description text,
-	propertytype Enum('apartment','house','villa','office')Not null,
-	price int NOT NULL,
-	listingtype Enum('sale','rent')Not null,
-	propertyStatus Enum('available','Booked','Sold'),
-	status Enum('pending','approved','rejected') Default 'pending',
-	address VARCHAR(255) NOT NULL,
+CREATE TABLE IF NOT EXISTS Property (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    description TEXT,
+    propertytype ENUM('apartment', 'house', 'villa', 'office') NOT NULL,
+    price INT NOT NULL,
+    listingtype ENUM('sale', 'rent') NOT NULL,
+    propertystatus ENUM('available', 'booked', 'sold') DEFAULT 'available',
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    address VARCHAR(255) NOT NULL,
     city VARCHAR(100) NOT NULL,
-	Created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	image_url varchar(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    image_url TEXT,
 
-	INDEX idx_price(price),
-	INDEX idx_prop_add(address,city),
-	INDEX idx_prop_type(property_type)
-	);`
+    INDEX idx_price (price),
+    INDEX idx_prop_add (address, city),
+    INDEX idx_prop_type (propertytype)
+);`
 	_, err = DB.Exec(Listing)
 	if err != nil {
 		log.Fatal("failed to exec db listing")

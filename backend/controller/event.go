@@ -11,31 +11,59 @@ import (
 
 func CreateEvent(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "unauthorized Method!!", http.StatusMethodNotAllowed)
+		http.Error(w, "Unauthorized Method!", http.StatusMethodNotAllowed)
 		return
 	}
+
 	Useremail, ok := r.Context().Value(middleware.UserEmailKey).(string)
 	if !ok {
 		http.Error(w, "Need to login", http.StatusUnauthorized)
 		return
 	}
+
 	var event model.Listing
 
+	// Parse JSON payload from frontend body
 	err := json.NewDecoder(r.Body).Decode(&event)
 	if err != nil {
-		http.Error(w, "invalid data fields", http.StatusBadRequest)
+		http.Error(w, "Invalid data fields", http.StatusBadRequest)
 		return
 	}
-	query := `insert into property (id,Title,Description,Property_type,Price,Listing_type,Property_Status,Status,address,city)values(?,?,?,?,?,?,?,?,?,?)`
 
-	_, err = intializer.DB.Exec(query, event.Id, event.Title, event.Description, event.PropertyType, event.Price, event.ListingType, event.PropertyStatus, event.Status, event.Address, event.City)
+	// Default ENUM values if empty
+	if event.PropertyStatus == "" {
+		event.PropertyStatus = "available"
+	}
+	if event.Status == "" {
+		event.Status = "pending"
+	}
+
+	// MySQL auto-increments `id`, so we omit `id` from column insert list
+	query := `INSERT INTO Property (title, description, propertytype, price, listingtype, propertystatus, status, address, city, image_url) 
+	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+
+	_, err = intializer.DB.Exec(
+		query,
+		event.Title,
+		event.Description,
+		event.PropertyType,
+		event.Price,
+		event.ListingType,
+		event.PropertyStatus,
+		event.Status,
+		event.Address,
+		event.City,
+		event.Imageurl,
+	)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(`{"message":"successfully created"` + Useremail + `"}`))
+	w.Write([]byte(fmt.Sprintf(`{"message":"Successfully created listing for %s"}`, Useremail)))
 }
 
 func UpdateEvent(w http.ResponseWriter, r *http.Request) {
