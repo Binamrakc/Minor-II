@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-function Sidebar({ isDarkMode, setIsDarkMode, isAdmin }) {
+function Sidebar({ isDarkMode, setIsDarkMode, isAdmin, isSeller }) {
   const location = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false); // Handles desktop collapsed state
-  const [mobileOpen, setMobileOpen] = useState(false);   // Handles mobile open state
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const isActive = (path) => location.pathname === path;
 
@@ -123,13 +123,12 @@ function Sidebar({ isDarkMode, setIsDarkMode, isAdmin }) {
         {/* Dynamic Nav Item List */}
         <div className={`flex-grow-1 py-3 overflow-y-auto ${isCollapsed ? "px-2" : "px-3"}`}>
           <ul className="nav nav-pills flex-column gap-1">
-            
             {[
               { path: "/", label: "Dashboard", icon: "house" },
-               { path: "/about", label: "About Us", icon: "info-circle" },
               { path: "/contact", label: "Contact Us", icon: "telephone" },
+              ...(isAdmin || isSeller ? [{ path: "/enquiry", label: "Enquiry", icon: "envelope" }] : []),
               { path: "/CreateEvent", label: "Create Event", icon: "plus-circle" },
-             
+              { path: "/about", label: "About Us", icon: "info-circle" },
               ...(isAdmin ? [
                 { path: "/users", label: "Users", icon: "person" },
                 { path: "/AdminReview", label: "Admin Review", icon: "shield-check" },
@@ -155,7 +154,6 @@ function Sidebar({ isDarkMode, setIsDarkMode, isAdmin }) {
                 </li>
               );
             })}
-
           </ul>
         </div>
 
