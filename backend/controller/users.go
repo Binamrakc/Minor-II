@@ -15,7 +15,8 @@ func Getusers(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized Access!", http.StatusMethodNotAllowed)
 		return
 	}
-	userRole, _ := r.Context().Value(middleware.UserRoleKey).(string)
+	userRole, ok := r.Context().Value(middleware.UserRoleKey).(string)
+	fmt.Println("userRole:", userRole, "ok:", ok)
 	if userRole != "admin" {
 		http.Error(w, `{"message":"Forbidden: Admin access required"}`, http.StatusForbidden)
 		return
@@ -168,7 +169,7 @@ func Getprofile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Query user details from the 'register' table using the email
-	var user UserProfile
+	var user model.Registerinput
 	query := `SELECT Id, name, email, address, phone, age, Status FROM register WHERE email = ?`
 
 	err := intializer.DB.QueryRow(query, userEmail).Scan(

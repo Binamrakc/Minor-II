@@ -33,8 +33,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	var role string // Added role fetching
 
 	// Fetch password & role (optional, adjust query to match your schema)
-	result := "SELECT id, password FROM register WHERE email = ?"
-	err = intializer.DB.QueryRow(result, login.Email).Scan(&id, &storeshash)
+	result := "SELECT id, password,status FROM register WHERE email = ?"
+	err = intializer.DB.QueryRow(result, login.Email).Scan(&id, &storeshash, &role)
 	if err != nil {
 		http.Error(w, `{"message":"Invalid email or password"}`, http.StatusUnauthorized)
 		return
