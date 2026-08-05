@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import 'bootstrap-icons/font/bootstrap-icons.css';
+
+// Go Backend Base URL
+const API_BASE_URL = "http://localhost:8080";
+
 function RegisterPage() {
   const navigate = useNavigate();
 
@@ -15,6 +19,7 @@ function RegisterPage() {
 
   const [confirmPassword, setConfirmPassword] = useState("");
   const [status, setStatus] = useState({ type: "", msg: "" });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setRegisterData({
@@ -27,6 +32,7 @@ function RegisterPage() {
     e.preventDefault();
     setStatus({ type: "", msg: "" });
 
+    // 1. Password check
     if (registerData.password !== confirmPassword) {
       setStatus({
         type: "danger",
@@ -35,32 +41,53 @@ function RegisterPage() {
       return;
     }
 
+    setLoading(true);
+
     try {
+      // 2. Format payload: Keep phone strictly as a string
       const payload = {
-        ...registerData,
-        phone: parseInt(registerData.phone, 10),
-        age: parseInt(registerData.age, 10)
+        name: registerData.name,
+        email: registerData.email,
+        password: registerData.password,
+        address: registerData.address,
+        phone: String(registerData.phone), // ✅ Sent as string
+        age: parseInt(registerData.age, 10) || 0
       };
 
-      const res = await fetch("http://localhost:8080/register", {
+      // 3. Request to Go Backend
+      const res = await fetch(`${API_BASE_URL}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json().catch(() => ({}));
+      // Try parsing JSON, fallback to raw text if Go sends a string
+      let errorMessage = "";
+      try {
+        const textResponse = await res.text();
+        try {
+          const jsonResponse = JSON.parse(textResponse);
+          errorMessage = jsonResponse.message || textResponse;
+        } catch {
+          errorMessage = textResponse; // Plain string response from Go http.Error
+        }
+      } catch {
+        errorMessage = "Registration failed!";
+      }
 
       if (!res.ok) {
         setStatus({
           type: "danger",
-          msg: data.message || "Registration failed!",
+          msg: errorMessage || "Registration failed!",
         });
+        setLoading(false);
         return;
       }
 
+      // 4. Handle Success
       setStatus({
         type: "success",
-        msg: "Registered successfully!",
+        msg: "Registered successfully! Redirecting to login...",
       });
 
       setRegisterData({
@@ -73,11 +100,17 @@ function RegisterPage() {
       });
       setConfirmPassword("");
 
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
+
     } catch (err) {
       setStatus({
         type: "danger",
-        msg: "Backend not reachable (check server/CORS)."
+        msg: "Backend not reachable. Ensure Go server is running on http://localhost:8080."
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -96,7 +129,7 @@ function RegisterPage() {
           minHeight: "650px"
         }}
       >
-        {/* Left Section: Illustration & Graphics Placeholder */}
+        {/* Left Section */}
         <div 
           className="col-lg-6 d-none d-lg-flex flex-column align-items-center justify-content-center position-relative"
           style={{ 
@@ -104,7 +137,6 @@ function RegisterPage() {
             backgroundImage: "radial-gradient(circle at 20% 30%, #e2dcff 0%, transparent 40%), radial-gradient(circle at 75% 80%, #e8e4ff 0%, transparent 35%)"
           }}
         >
-          {/* Main Visual Placeholder */}
           <div className="text-center p-5 z-2">
             <div 
               className="d-inline-flex align-items-center justify-content-center bg-white rounded-circle shadow-sm mb-4"
@@ -116,12 +148,11 @@ function RegisterPage() {
             <p className="text-muted px-4">Create your account to unlock all features and start managing your workspace.</p>
           </div>
 
-          {/* Floating decorative elements matching the image context */}
           <div className="position-absolute rounded shadow-sm opacity-50" style={{ width: "60px", height: "40px", background: "#dcd6ff", top: "15%", left: "10%", transform: "skewY(-10deg)" }}></div>
           <div className="position-absolute rounded shadow-sm opacity-50" style={{ width: "80px", height: "50px", background: "#e6e2ff", bottom: "12%", right: "8%", transform: "skewY(15deg)" }}></div>
         </div>
 
-        {/* Right Section: Interactive Registration Form */}
+        {/* Right Section */}
         <div className="col-lg-6 p-4 p-md-5 d-flex flex-column justify-content-center">
           <div className="w-100" style={{ maxWidth: "420px", margin: "0 auto" }}>
             
@@ -136,7 +167,6 @@ function RegisterPage() {
 
             <form onSubmit={handleSubmit}>
               
-              {/* Custom Underlined Inputs matching the image style */}
               <div className="mb-3">
                 <input
                   type="text"
@@ -221,10 +251,9 @@ function RegisterPage() {
                 />
               </div>
 
-              {/* Action Button */}
               <button 
                 type="submit" 
-                className="btn w-100 text-white mb-4 shadow-sm"
+                className="btn w-100 text-white mb-4 shadow-sm d-flex align-items-center justify-content-center gap-2"
                 style={{ 
                   backgroundColor: "#5c62ec", 
                   borderRadius: "8px", 
@@ -232,12 +261,19 @@ function RegisterPage() {
                   fontWeight: "500",
                   letterSpacing: "0.5px"
                 }}
+                disabled={loading}
               >
-                Sign Up
+                {loading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Creating Account...
+                  </>
+                ) : (
+                  "Sign Up"
+                )}
               </button>
             </form>
 
-            {/* Redirection Layer */}
             <div className="text-start mb-4 small" style={{ color: "#2c336b" }}>
               Already have an account?{" "}
               <button
@@ -250,7 +286,6 @@ function RegisterPage() {
               </button>
             </div>
 
-            {/* Mobile Stores Downloads Row */}
             <div className="d-flex gap-2 pt-2 border-top justify-content-start">
               <a href="#appstore" className="btn btn-dark d-flex align-items-center bg-black border-0 px-3 py-1" style={{ borderRadius: "6px" }}>
                 <i className="bi bi-apple me-2" style={{ fontSize: "1.2rem" }}></i>
@@ -272,7 +307,6 @@ function RegisterPage() {
         </div>
       </div>
 
-      {/* Embedded page styles to configure the borderless inputs */}
       <style>{`
         .custom-underline-input {
           border: none !important;
@@ -291,7 +325,6 @@ function RegisterPage() {
         .custom-underline-input:focus {
           border-bottom: 2px solid #5c62ec !important;
         }
-        /* Removing browser styling arrows for age input */
         .custom-underline-input[type=number]::-webkit-inner-spin-button, 
         .custom-underline-input[type=number]::-webkit-outer-spin-button { 
           -webkit-appearance: none; 

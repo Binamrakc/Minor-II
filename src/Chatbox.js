@@ -38,16 +38,24 @@ const AIChatbox = () => {
     };
 
     return (
-        <div className="fixed-bottom p-3" style={{ zIndex: 1050, left: 'auto', width: '350px' }}>
+        <div className="position-fixed d-flex flex-column p-3" style={{ zIndex: 1050, right: '20px', bottom: '20px', width: '350px', alignItems: 'flex-end' }}>
             {!isOpen ? (
                 <Button variant="primary" className="rounded-circle shadow-lg p-3" onClick={() => setIsOpen(true)}>
                     💬
                 </Button>
             ) : (
-                <Card className="shadow-lg border-0">
+                <Card className="shadow-lg border-0" style={{ width: '100%' }}>
                     <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
                         <strong>AI Assistant</strong>
-                        <Button variant="close" variant="white" onClick={() => setIsOpen(false)} />
+                        <Button
+                            variant="white blue"
+                            className="text-white border border-white shadow-sm"
+                            style={{ width: '34px', height: '34px', lineHeight: '1', padding: '0' }}
+                            onClick={() => setIsOpen(false)}
+                            aria-label="Close chat"
+                        >
+                            ×
+                        </Button>
                     </Card.Header>
                     <Card.Body style={{ height: '300px', overflowY: 'auto', backgroundColor: '#f8f9fa' }}>
                         {messages.map((msg, idx) => (

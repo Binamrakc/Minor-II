@@ -1,9 +1,36 @@
-import React from "react";
+import React, { useState } from "react";
 import { Carousel } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 function PropertyDetails() {
   const navigate = useNavigate();
+
+  const [comment, setComment] = useState("");
+
+  const [comments, setComments] = useState([
+    {
+      name: "Ram Sharma",
+      message: "The apartment looks wonderful.",
+    },
+    {
+      name: "Sita Thapa",
+      message: "Is the parking area available?",
+    },
+  ]);
+
+  const addComment = () => {
+    if (comment.trim() === "") return;
+
+    setComments([
+      ...comments,
+      {
+        name: "Anonymous User",
+        message: comment,
+      },
+    ]);
+
+    setComment("");
+  };
 
   const property = {
     title: "Luxury Apartment",
@@ -15,20 +42,19 @@ function PropertyDetails() {
     area: "1500 sq. ft.",
 
     description:
-      "This luxurious apartment offers a spacious living room, a modern kitchen, comfortable bedrooms, attached bathrooms, and a private balcony with a beautiful city view. The property is located in a peaceful neighborhood close to schools, hospitals, shopping centers, and public transportation.",
+      "This luxurious apartment provides a spacious living room, a modern kitchen, comfortable bedrooms, attached bathrooms, and a private balcony. It is situated in a peaceful environment close to schools, hospitals, supermarkets, and public transportation.",
 
     images: [
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85",
-      "https://images.unsplash.com/photo-1484154218962-a197022b5858",
-      "https://images.unsplash.com/photo-1494526585095-c41746248156",
-      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750",
+      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200",
+      "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200",
+      "https://images.unsplash.com/photo-1494526585095-c41746248156?w=1200",
+      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200",
     ],
   };
 
   return (
     <div className="container py-4">
-
-      {/* Image section */}
+      {/* Images */}
 
       <div className="shadow rounded overflow-hidden mb-4">
         <Carousel>
@@ -36,8 +62,8 @@ function PropertyDetails() {
             <Carousel.Item key={index}>
               <img
                 src={image}
-                alt={`Property ${index}`}
-                className="w-100"
+                alt="Property"
+                className="d-block w-100"
                 style={{
                   height: "500px",
                   objectFit: "cover",
@@ -48,22 +74,21 @@ function PropertyDetails() {
         </Carousel>
       </div>
 
-      {/* Property information */}
+      {/* Property card */}
 
-      <div className="card shadow border-0">
+      <div className="card border-0 shadow">
         <div className="card-body p-4">
-
           <h2 className="fw-bold">{property.title}</h2>
 
-          <h4 className="text-success mb-3">
-            {property.price}
-          </h4>
+          <h4 className="text-success mt-3">{property.price}</h4>
 
-          <p>
+          <p className="mt-3">
             <strong>Location:</strong> {property.location}
           </p>
 
           <hr />
+
+          {/* Overview */}
 
           <h3 className="mb-3">Overview</h3>
 
@@ -71,54 +96,113 @@ function PropertyDetails() {
             {property.description}
           </p>
 
+          <p className="text-muted">
+            The apartment offers modern architecture, excellent ventilation,
+            natural lighting, and high-quality finishing. Residents can enjoy
+            nearby shopping centres, schools, restaurants, and healthcare
+            facilities.
+          </p>
+
           <hr />
 
-          <h3 className="mb-3">Property Details</h3>
+          {/* Property details */}
+
+          <h3 className="mb-4">Property Details</h3>
 
           <div className="row">
-            <div className="col-md-3 mb-3">
-              <strong>Bedrooms</strong>
-              <p>{property.bedrooms}</p>
+            <div className="col-md-3 col-6 mb-3">
+              <div className="border rounded p-3 text-center">
+                <h6>Bedrooms</h6>
+                <strong>{property.bedrooms}</strong>
+              </div>
             </div>
 
-            <div className="col-md-3 mb-3">
-              <strong>Bathrooms</strong>
-              <p>{property.bathrooms}</p>
+            <div className="col-md-3 col-6 mb-3">
+              <div className="border rounded p-3 text-center">
+                <h6>Bathrooms</h6>
+                <strong>{property.bathrooms}</strong>
+              </div>
             </div>
 
-            <div className="col-md-3 mb-3">
-              <strong>Parking</strong>
-              <p>{property.parking}</p>
+            <div className="col-md-3 col-6 mb-3">
+              <div className="border rounded p-3 text-center">
+                <h6>Parking</h6>
+                <strong>{property.parking}</strong>
+              </div>
             </div>
 
-            <div className="col-md-3 mb-3">
-              <strong>Area</strong>
-              <p>{property.area}</p>
+            <div className="col-md-3 col-6 mb-3">
+              <div className="border rounded p-3 text-center">
+                <h6>Area</h6>
+                <strong>{property.area}</strong>
+              </div>
             </div>
           </div>
 
           <hr />
+
+          {/* Facilities */}
 
           <h3 className="mb-3">Facilities</h3>
 
-          <ul>
-            <li>24-hour security service</li>
-            <li>High-speed internet connection</li>
-            <li>Water supply</li>
-            <li>Nearby schools and hospitals</li>
-            <li>Parking area</li>
-            <li>Modern kitchen</li>
-          </ul>
+          <div className="row">
+            <div className="col-md-6">
+              <ul>
+                <li>Twenty-four-hour security</li>
+                <li>Parking area</li>
+                <li>Water supply</li>
+              </ul>
+            </div>
 
-          <div className="mt-4">
-            <button
-              className="btn btn-primary px-4"
-              onClick={() => navigate("/contact")}
-            >
-              Make Enquiry
-            </button>
+            <div className="col-md-6">
+              <ul>
+                <li>High-speed internet</li>
+                <li>Modern kitchen</li>
+                <li>Nearby hospitals and schools</li>
+              </ul>
+            </div>
           </div>
 
+          <hr />
+
+          {/* Enquiry button */}
+
+          <button
+            className="btn btn-primary px-4"
+            onClick={() => navigate("/contact")}
+          >
+            Make Enquiry
+          </button>
+
+          <hr className="my-4" />
+
+          {/* Comments section */}
+
+          <h3 className="mb-4">Comments</h3>
+
+          <textarea
+            className="form-control"
+            rows="4"
+            placeholder="Write your comment here..."
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          ></textarea>
+
+          <button
+            className="btn btn-success mt-3 mb-4"
+            onClick={addComment}
+          >
+            Post Comment
+          </button>
+
+          {comments.map((item, index) => (
+            <div className="card mb-3 shadow-sm" key={index}>
+              <div className="card-body">
+                <h6 className="fw-bold">{item.name}</h6>
+                <p className="mb-0 text-muted">{item.message}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
