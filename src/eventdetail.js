@@ -1,115 +1,128 @@
-import React, { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import events from "./eventData.js";
+import React from "react";
+import { Carousel } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 
-function EventDescription() {
-  const { id } = useParams();
+function PropertyDetails() {
   const navigate = useNavigate();
-  const eventData = events.find((item) => item.id === Number(id));
-  const [activeImage, setActiveImage] = useState(0);
 
-  if (!eventData) {
-    return (
-      <div className="container py-5">
-        <div className="alert alert-warning">Room details not found.</div>
-      </div>
-    );
-  }
+  const property = {
+    title: "Luxury Apartment",
+    price: "NPR 25,000/month",
+    location: "Kathmandu, Nepal",
+    bedrooms: 3,
+    bathrooms: 2,
+    parking: 1,
+    area: "1500 sq. ft.",
+
+    description:
+      "This luxurious apartment offers a spacious living room, a modern kitchen, comfortable bedrooms, attached bathrooms, and a private balcony with a beautiful city view. The property is located in a peaceful neighborhood close to schools, hospitals, shopping centers, and public transportation.",
+
+    images: [
+      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85",
+      "https://images.unsplash.com/photo-1484154218962-a197022b5858",
+      "https://images.unsplash.com/photo-1494526585095-c41746248156",
+      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750",
+    ],
+  };
 
   return (
-    <div className="container-fluid py-4 px-4 px-md-5" style={{ backgroundColor: "#f8f9fb", minHeight: "100vh" }}>
-      <div className="row g-4">
-        {/* Left: Photo gallery */}
-        <div className="col-lg-7">
-          <div className="rounded-4 overflow-hidden shadow-sm mb-3 bg-dark" style={{ height: "420px" }}>
-            <img
-              src={eventData.gallery[activeImage]}
-              alt={`${eventData.title} photo ${activeImage + 1}`}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          </div>
+    <div className="container py-4">
 
-          <div className="d-flex gap-2 flex-wrap">
-            {eventData.gallery.map((src, index) => (
-              <div
-                key={`${src}-${index}`}
-                onClick={() => setActiveImage(index)}
-                role="button"
-                className="rounded-3 overflow-hidden"
+      {/* Image section */}
+
+      <div className="shadow rounded overflow-hidden mb-4">
+        <Carousel>
+          {property.images.map((image, index) => (
+            <Carousel.Item key={index}>
+              <img
+                src={image}
+                alt={`Property ${index}`}
+                className="w-100"
                 style={{
-                  width: "84px",
-                  height: "84px",
-                  border: index === activeImage ? "2px solid #0d6efd" : "2px solid transparent",
-                  cursor: "pointer",
-                  opacity: index === activeImage ? 1 : 0.75,
-                  transition: "opacity 0.15s ease",
+                  height: "500px",
+                  objectFit: "cover",
                 }}
-              >
-                <img
-                  src={src}
-                  alt={`${eventData.title} thumbnail ${index + 1}`}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              </div>
-            ))}
+              />
+            </Carousel.Item>
+          ))}
+        </Carousel>
+      </div>
+
+      {/* Property information */}
+
+      <div className="card shadow border-0">
+        <div className="card-body p-4">
+
+          <h2 className="fw-bold">{property.title}</h2>
+
+          <h4 className="text-success mb-3">
+            {property.price}
+          </h4>
+
+          <p>
+            <strong>Location:</strong> {property.location}
+          </p>
+
+          <hr />
+
+          <h3 className="mb-3">Overview</h3>
+
+          <p className="text-muted">
+            {property.description}
+          </p>
+
+          <hr />
+
+          <h3 className="mb-3">Property Details</h3>
+
+          <div className="row">
+            <div className="col-md-3 mb-3">
+              <strong>Bedrooms</strong>
+              <p>{property.bedrooms}</p>
+            </div>
+
+            <div className="col-md-3 mb-3">
+              <strong>Bathrooms</strong>
+              <p>{property.bathrooms}</p>
+            </div>
+
+            <div className="col-md-3 mb-3">
+              <strong>Parking</strong>
+              <p>{property.parking}</p>
+            </div>
+
+            <div className="col-md-3 mb-3">
+              <strong>Area</strong>
+              <p>{property.area}</p>
+            </div>
           </div>
-        </div>
 
-        {/* Right: Overview details */}
-        <div className="col-lg-5">
-          <div className="bg-white rounded-4 shadow-sm p-4 p-md-5 h-100">
-            <span className="badge bg-danger rounded-pill px-3 py-2 mb-3" style={{ fontSize: "0.8rem" }}>
-              {eventData.category}
-            </span>
+          <hr />
 
-            <h2 className="fw-bold mb-1" style={{ color: "#0b1354" }}>
-              {eventData.title}
-            </h2>
+          <h3 className="mb-3">Facilities</h3>
 
-            <p className="fs-4 fw-semibold text-primary mb-3">
-              {eventData.price}
-              {eventData.listingtype === "rent" ? " / month" : ""}
-            </p>
+          <ul>
+            <li>24-hour security service</li>
+            <li>High-speed internet connection</li>
+            <li>Water supply</li>
+            <li>Nearby schools and hospitals</li>
+            <li>Parking area</li>
+            <li>Modern kitchen</li>
+          </ul>
 
-            <hr className="my-4" />
-
-            <div className="mb-3">
-              <h6 className="text-muted text-uppercase small mb-1">Date</h6>
-              <p className="mb-0">{eventData.date}</p>
-            </div>
-
-            <div className="mb-3">
-              <h6 className="text-muted text-uppercase small mb-1">Area</h6>
-              <p className="mb-0">{eventData.area}</p>
-            </div>
-
-            <div className="mb-3">
-              <h6 className="text-muted text-uppercase small mb-1">Rooms</h6>
-              <p className="mb-0">{eventData.rooms}</p>
-            </div>
-
-            <div className="mb-3">
-              <h6 className="text-muted text-uppercase small mb-1">Bathrooms</h6>
-              <p className="mb-0">{eventData.bathrooms}</p>
-            </div>
-
-            <div className="mb-4">
-              <h6 className="text-muted text-uppercase small mb-1">Description</h6>
-              <p className="mb-0 text-muted">{eventData.description}</p>
-            </div>
-
+          <div className="mt-4">
             <button
-              className="btn btn-primary w-100 py-2 fw-semibold"
-              style={{ borderRadius: "8px" }}
-              onClick={() => navigate('/contact')}
+              className="btn btn-primary px-4"
+              onClick={() => navigate("/contact")}
             >
-              More Details
+              Make Enquiry
             </button>
           </div>
+
         </div>
       </div>
     </div>
   );
 }
 
-export default EventDescription;
+export default PropertyDetails;

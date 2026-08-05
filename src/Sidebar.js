@@ -126,8 +126,10 @@ function Sidebar({ isDarkMode, setIsDarkMode, isAdmin }) {
             
             {[
               { path: "/", label: "Dashboard", icon: "house" },
+               { path: "/about", label: "About Us", icon: "info-circle" },
               { path: "/contact", label: "Contact Us", icon: "telephone" },
               { path: "/CreateEvent", label: "Create Event", icon: "plus-circle" },
+             
               ...(isAdmin ? [
                 { path: "/users", label: "Users", icon: "person" },
                 { path: "/AdminReview", label: "Admin Review", icon: "shield-check" },

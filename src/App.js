@@ -14,6 +14,7 @@ import RegisterPage from './Register.js';
 import ViewProfile from './ViewProfile.js';
 import ChangePassword from './Password.js';
 import AIChatbox from './Chatbox.js';
+import AboutPage from './aboutus.js';
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -62,6 +63,7 @@ function App() {
             <Route path="/AdminReview" element={isAdmin ? <AdminReview isDarkMode={isDarkMode} /> : <Navigate to="/" replace />} />
             <Route path="/login" element={<AuthPage isDarkMode={isDarkMode} />} />
             <Route path="/register" element={<RegisterPage isDarkMode={isDarkMode} />} />
+            <Route path="/about" element={<AboutPage isDarkMode={isDarkMode} />} />
             <Route path="/setting" element={<AppSettings isDarkMode={isDarkMode} />} />
             <Route path="/profile" element={<ViewProfile isDarkMode={isDarkMode} />} />
             <Route path="/change-password" element={<ChangePassword isDarkMode={isDarkMode} />} />

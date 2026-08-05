@@ -124,7 +124,13 @@ function Navbar({ isDarkMode }) {
           </form>
 
           {/* Right Action Authentication Button Layout */}
-          <div className="d-flex gap-2 align-items-center ms-auto">
+          <div className="navbar-nav d-flex align-items-center gap-2 me-3">
+            <Link to="/about" className="nav-link text-muted px-3" style={{ fontSize: "0.95rem", fontWeight: 500 }}>
+              About Us
+            </Link>
+          </div>
+
+          <div className="d-flex gap-2 align-items-center">
             <Link 
               to="/login" 
               className="btn px-4 py-2 text-dark bg-transparent border-dark hover-login-btn"
