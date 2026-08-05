@@ -10,63 +10,37 @@ import (
 	"net/http"
 )
 
-func Getusers(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Unauthorized Access!", http.StatusMethodNotAllowed)
+ffunc Updateuser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Unauthorized acess!", http.StatusMethodNotAllowed)
 		return
 	}
-	userRole, ok := r.Context().Value(middleware.UserRoleKey).(string)
-	fmt.Println("userRole:", userRole, "ok:", ok)
+
+	userRole, _ := r.Context().Value(middleware.UserRoleKey).(string)
 	if userRole != "admin" {
 		http.Error(w, `{"message":"Forbidden: Admin access required"}`, http.StatusForbidden)
 		return
 	}
 
-	query := `select id,name,email,status from register`
-	rows, err := intializer.DB.Query(query)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
-
-	users := []model.Registerinput{}
-	for rows.Next() {
-		var u model.Registerinput
-		err := rows.Scan(&u.Id, &u.Name, &u.Email, &u.Status)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		users = append(users, u)
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(users)
-}
-
-func Updateuser(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPut {
-		http.Error(w, "Unauthorized acess!", http.StatusMethodNotAllowed)
-		return
-	}
-	userEmail, ok := r.Context().Value(middleware.UserEmailKey).(string)
-	if !ok || userEmail == "" {
-		http.Error(w, `{"message":"Unauthorized: Please log in"}`, http.StatusUnauthorized)
-		return
-	}
 	var update model.Registerinput
 	err := json.NewDecoder(r.Body).Decode(&update)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	query := `update register set name=?,address=?,phone=?,age=? where email=?`
-	res, err := intializer.DB.Exec(query, update.Name, update.Address, update.Phone, update.Age, userEmail)
+
+	if update.Id == 0 {
+		http.Error(w, `{"message":"User id is required"}`, http.StatusBadRequest)
+		return
+	}
+
+	query := `update register set name=?, address=?, phone=?, age=?, status=? where id=?`
+	res, err := intializer.DB.Exec(query, update.Name, update.Address, update.Phone, update.Age, update.Status, update.Id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	rowsaffected, err := res.RowsAffected()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -76,9 +50,59 @@ func Updateuser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"message":"Account not found"}`, http.StatusNotFound)
 		return
 	}
+
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Your account has been updated successfully"}`))
+	w.Write([]byte(`{"message":"User updated successfully"}`))
+}
+
+func Deleteuser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Invalid Method!", http.StatusMethodNotAllowed)
+		return
+	}
+
+	Useremail, ok := r.Context().Value(middleware.UserEmailKey).(string)
+	if !ok {
+		http.Error(w, "Need to login", http.StatusUnauthorized)
+		return
+	}
+
+	userRole, _ := r.Context().Value(middleware.UserRoleKey).(string)
+	if userRole != "admin" {
+		http.Error(w, `{"message":"Forbidden: Admin access required"}`, http.StatusForbidden)
+		return
+	}
+
+	var del model.Registerinput
+	err := json.NewDecoder(r.Body).Decode(&del)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	query := `delete from register where id=?`
+	res, err := intializer.DB.Exec(query, del.Id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rowsaffected, err := res.RowsAffected()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if rowsaffected == 0 {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	responseJSON := fmt.Sprintf(`{"message":"User deleted successfully by %s"}`, Useremail)
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(responseJSON))
 }
 
 func Deleteuser(w http.ResponseWriter, r *http.Request) {
