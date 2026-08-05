@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+// Go Backend Base URL
+const API_BASE_URL = "http://localhost:8080";
+
 function AuthPage() {
   const navigate = useNavigate();
 
@@ -10,6 +13,7 @@ function AuthPage() {
   });
 
   const [status, setStatus] = useState({ type: "", msg: "" });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setLoginData({
@@ -21,9 +25,10 @@ function AuthPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus({ type: "", msg: "" });
+    setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8080/login", {
+      const res = await fetch(`${API_BASE_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -31,34 +36,54 @@ function AuthPage() {
         body: JSON.stringify(loginData),
       });
 
-      const data = await res.json().catch(() => ({}));
+      // Handle both JSON objects and plain text responses from Go
+      let resText = await res.text();
+      let data = {};
+      try {
+        data = JSON.parse(resText);
+      } catch {
+        data = { message: resText };
+      }
 
       if (!res.ok) {
         setStatus({
           type: "danger",
-          msg: data.message || "Login failed!",
+          msg: data.message || "Login failed! Please check your credentials.",
         });
+        setLoading(false);
         return;
       }
-      
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));  
-      
+
+      // Save token and user details to localStorage
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
       setStatus({
         type: "success",
-        msg: "Login successful!",
+        msg: "Login successful! Redirecting...",
       });
 
       setLoginData({
         email: "",
         password: ""
       });
-      navigate("/profile");
+
+      // Redirect after brief delay
+      setTimeout(() => {
+        navigate("/"); // Or navigate("/setting")
+      }, 1000);
+
     } catch (err) {
       setStatus({
         type: "danger",
-        msg: "Backend not reachable (check server/CORS)."
+        msg: "Backend not reachable. Ensure Go server is running on http://localhost:8080."
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -100,7 +125,7 @@ function AuthPage() {
             </div>
             
             <div className="text-center px-4 position-relative" style={{ zIndex: 2 }}>
-              <h3 className="fw-bold mb-2" style={{ color: "#0b1354" }}>Welcome to the Platform</h3>
+              <h3 className="fw-bold mb-2" style={{ color: "#0b1354" }}>Welcome to GharBasai</h3>
               <p className="text-muted small">Manage workspaces, connect with your pipeline, and organize operations flawlessly.</p>
             </div>
 
@@ -128,7 +153,7 @@ function AuthPage() {
                     type="email"
                     name="email"
                     className="form-control custom-underline-input"
-                    placeholder="Username or email"
+                    placeholder="Email address"
                     value={loginData.email}
                     onChange={handleChange}
                     required
@@ -147,18 +172,26 @@ function AuthPage() {
                   />
                 </div>
 
-                {/* Styled purple button */}
+                {/* Styled purple button with loading state */}
                 <button 
                   type="submit" 
-                  className="btn w-100 text-white mb-3"
+                  className="btn w-100 text-white mb-3 d-flex align-items-center justify-content-center gap-2"
                   style={{ 
                     backgroundColor: "#5c62ec", 
                     borderRadius: "8px", 
                     padding: "10px", 
                     fontWeight: "500"
                   }}
+                  disabled={loading}
                 >
-                  Login
+                  {loading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                      Logging in...
+                    </>
+                  ) : (
+                    "Login"
+                  )}
                 </button>
               </form>
 
