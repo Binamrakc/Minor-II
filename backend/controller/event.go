@@ -3,10 +3,16 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	intializer "mis/Intializer"
 	middleware "mis/Middleware"
 	"mis/model"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
 )
 
 func CreateEvent(w http.ResponseWriter, r *http.Request) {
@@ -21,39 +27,121 @@ func CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var event model.Listing
-
-	// Parse JSON payload from frontend body
-	err := json.NewDecoder(r.Body).Decode(&event)
+	// Limit total upload size to 32MB
+	err := r.ParseMultipartForm(32 << 20)
 	if err != nil {
-		http.Error(w, "Invalid data fields", http.StatusBadRequest)
+		http.Error(w, "File too large or invalid form data", http.StatusBadRequest)
 		return
 	}
 
-	// Default ENUM values if empty
-	if event.PropertyStatus == "" {
-		event.PropertyStatus = "available"
-	}
-	if event.Status == "" {
-		event.Status = "pending"
+	// Read & Sanitize form fields
+	title := strings.TrimSpace(r.FormValue("title"))
+	description := strings.TrimSpace(r.FormValue("description"))
+	propertytype := strings.ToLower(strings.TrimSpace(r.FormValue("propertytype")))
+	priceStr := strings.TrimSpace(r.FormValue("price"))
+	listingtype := strings.ToLower(strings.TrimSpace(r.FormValue("listingtype")))
+	propertystatus := strings.ToLower(strings.TrimSpace(r.FormValue("propertystatus")))
+	status := strings.ToLower(strings.TrimSpace(r.FormValue("status")))
+	address := strings.TrimSpace(r.FormValue("address"))
+	city := strings.TrimSpace(r.FormValue("city"))
+
+	// --- VALIDATION & DEFAULTS --- //
+
+	// Validate ENUM: propertytype ('apartment', 'house', 'villa', 'office')
+	validPropertyTypes := map[string]bool{"apartment": true, "house": true, "villa": true, "office": true}
+	if !validPropertyTypes[propertytype] {
+		http.Error(w, "Invalid propertytype. Allowed: apartment, house, villa, office", http.StatusBadRequest)
+		return
 	}
 
-	// MySQL auto-increments `id`, so we omit `id` from column insert list
+	// Validate ENUM: listingtype ('sale', 'rent')
+	validListingTypes := map[string]bool{"sale": true, "rent": true}
+	if !validListingTypes[listingtype] {
+		http.Error(w, "Invalid listingtype. Allowed: sale, rent", http.StatusBadRequest)
+		return
+	}
+
+	// Parse price from string to integer
+	price, err := strconv.Atoi(priceStr)
+	if err != nil || price < 0 {
+		http.Error(w, "Price must be a valid positive number", http.StatusBadRequest)
+		return
+	}
+
+	// Set Defaults for optional ENUM fields
+	if propertystatus == "" {
+		propertystatus = "available"
+	}
+	if status == "" {
+		status = "pending"
+	}
+
+	// --- HANDLE FILE UPLOADS --- //
+	uploadDir := "./uploads"
+	os.MkdirAll(uploadDir, os.ModePerm)
+
+	var imageURLs []string
+	files := r.MultipartForm.File["images"]
+
+	if len(files) > 4 {
+		http.Error(w, "You can upload a maximum of 4 photos", http.StatusBadRequest)
+		return
+	}
+
+	for _, fileHeader := range files {
+		file, err := fileHeader.Open()
+		if err != nil {
+			http.Error(w, "Failed to read file", http.StatusBadRequest)
+			return
+		}
+
+		ext := filepath.Ext(fileHeader.Filename)
+		filename := fmt.Sprintf("%d_%s%s", time.Now().UnixNano(), strings.TrimSuffix(fileHeader.Filename, ext), ext)
+		dstPath := filepath.Join(uploadDir, filename)
+
+		dst, err := os.Create(dstPath)
+		if err != nil {
+			file.Close()
+			http.Error(w, "Failed to save image", http.StatusInternalServerError)
+			return
+		}
+
+		if _, err := io.Copy(dst, file); err != nil {
+			file.Close()
+			dst.Close()
+			http.Error(w, "Failed to save image", http.StatusInternalServerError)
+			return
+		}
+
+		file.Close()
+		dst.Close()
+
+		imageURL := fmt.Sprintf("http://localhost:8080/uploads/%s", filename)
+		imageURLs = append(imageURLs, imageURL)
+	}
+
+	imageJSON, err := json.Marshal(imageURLs)
+	if err != nil {
+		http.Error(w, "Failed to process image URLs", http.StatusInternalServerError)
+		return
+	}
+
+	// Clean Query (Standard Space Characters)
 	query := `INSERT INTO Property (title, description, propertytype, price, listingtype, propertystatus, status, address, city, image_url) 
 	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	_, err = intializer.DB.Exec(
 		query,
-		event.Title,
-		event.Description,
-		event.PropertyType,
-		event.Price,
-		event.ListingType,
-		event.PropertyStatus,
-		event.Status,
-		event.Address,
-		event.City,
-		event.Imageurl,
+		title,
+		description,
+		propertytype,
+		price, // Passed as integer
+		listingtype,
+		propertystatus,
+		status,
+		address,
+		city,
+		string(imageJSON),
 	)
 
 	if err != nil {
@@ -65,7 +153,6 @@ func CreateEvent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(fmt.Sprintf(`{"message":"Successfully created listing for %s"}`, Useremail)))
 }
-
 func UpdateEvent(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPut {

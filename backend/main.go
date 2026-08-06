@@ -39,7 +39,7 @@ func main() {
 	r.HandleFunc("POST /login", controller.Login)
 	r.HandleFunc("POST /contact", middleware.Jwtmiddleware(controller.Contact))
 	r.HandleFunc("GET /dashboard", controller.GetDashboard)
-	// r.HandleFunc("GET /event", controller.GetEventByID) // New: Fetch single event
+	r.HandleFunc("GET /event", controller.GetEventByID) // New: Fetch single event
 
 	// --- Authenticated User Routes ---
 	r.HandleFunc("GET /user/me", middleware.Jwtmiddleware(controller.Getprofile)) // New: Fetch own profile
@@ -59,5 +59,6 @@ func main() {
 	r.HandleFunc("GET /admin/users", middleware.Jwtmiddleware(controller.Getusers))
 	r.HandleFunc("DELETE /admin/user", middleware.Jwtmiddleware(controller.Deleteuser))
 
+	r.Handle("GET /uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
 	s.ListenAndServe()
 }

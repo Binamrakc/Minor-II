@@ -25,9 +25,9 @@ func Contact(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid data fields", http.StatusBadRequest)
 		return
 	}
-	query := "insert into contact(email,phone ,description)values(?,?,?,?)"
+	query := "insert into contact(email,phone ,description)values(?,?,?)"
 
-	_, err = intializer.DB.Exec(query, contact.Id, contact.Email, contact.Phone, contact.Description)
+	_, err = intializer.DB.Exec(query, contact.Email, contact.Phone, contact.Description)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

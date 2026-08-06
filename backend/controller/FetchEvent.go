@@ -1,11 +1,13 @@
 package controller
 
 import (
+	"database/sql"
 	"encoding/json"
 	intializer "mis/Intializer"
 	middleware "mis/Middleware"
 	"mis/model"
 	"net/http"
+	"strconv"
 )
 
 func GetDashboard(w http.ResponseWriter, r *http.Request) {
@@ -13,7 +15,7 @@ func GetDashboard(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid Request", http.StatusMethodNotAllowed)
 		return
 	}
-	query := `select id,Title,Description,Property_type,Price,Listing_type,Property_Status,Status,address,city
+	query := `select id,Title,Description,Propertytype,Price,Listingtype,PropertyStatus,Status,address,city,image_url
 				from property where Status='approved'`
 	rows, err := intializer.DB.Query(query)
 	if err != nil {
@@ -25,7 +27,7 @@ func GetDashboard(w http.ResponseWriter, r *http.Request) {
 	pending := []model.Listing{}
 	for rows.Next() {
 		var fetch model.Listing
-		err := rows.Scan(&fetch.Id, &fetch.Title, &fetch.Description, &fetch.PropertyType, &fetch.Price, &fetch.ListingType, &fetch.PropertyStatus, &fetch.Status, &fetch.Address, &fetch.City)
+		err := rows.Scan(&fetch.Id, &fetch.Title, &fetch.Description, &fetch.PropertyType, &fetch.Price, &fetch.ListingType, &fetch.PropertyStatus, &fetch.Status, &fetch.Address, &fetch.City, &fetch.Imageurl)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -52,7 +54,15 @@ func Adminapprove(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"message":"Forbidden: Admin access required"}`, http.StatusForbidden)
 		return
 	}
-	query := `select id,Title,Description,Property_type,Price,Listing_type,Property_Status,Status,address,city
+	// NOTE: column names here (Listingtype, PropertyStatus) don't match
+	// GetDashboard's query (Listing_type, Property_Status) above.
+	// Confirm which naming your actual schema uses and make both consistent.
+	//
+	// image_url is now included below — it was previously missing from
+	// both the SELECT and the Scan call, so the frontend never received
+	// any image data for pending listings (this was the root cause of
+	// images not showing on the admin review page).
+	query := `select id,Title,Description,Propertytype,Price,Listingtype,PropertyStatus,Status,address,city,image_url
 				from property where Status='pending'`
 	rows, err := intializer.DB.Query(query)
 	if err != nil {
@@ -64,7 +74,11 @@ func Adminapprove(w http.ResponseWriter, r *http.Request) {
 	pending := []model.Listing{}
 	for rows.Next() {
 		var fetch model.Listing
-		err := rows.Scan(&fetch.Id, &fetch.Title, &fetch.Description, &fetch.PropertyType, &fetch.Price, &fetch.ListingType, &fetch.PropertyStatus, &fetch.Status, &fetch.Address, &fetch.City)
+		// NOTE: &fetch.ImageUrl assumes model.Listing has a field named
+		// ImageUrl (json tag "image", matching CreateEvent's image_url
+		// column). If your struct uses a different field name, rename
+		// it here to match.
+		err := rows.Scan(&fetch.Id, &fetch.Title, &fetch.Description, &fetch.PropertyType, &fetch.Price, &fetch.ListingType, &fetch.PropertyStatus, &fetch.Status, &fetch.Address, &fetch.City, &fetch.Imageurl)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -81,7 +95,7 @@ func Adminapprove(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(pending)
 }
 
-type ReviewRequest struct { // Capital 'R' and 'R'
+type ReviewRequest struct {
 	ID     int    `json:"id"`
 	Action string `json:"action"`
 }
@@ -147,4 +161,44 @@ func ReviewEvent(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, `{"message":"Action must be either 'accept' or 'reject'"}`, http.StatusBadRequest)
 	}
+}
+func GetEventByID(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Invalid Request", http.StatusMethodNotAllowed)
+		return
+	}
+
+	idStr := r.URL.Query().Get("id")
+	if idStr == "" {
+		http.Error(w, `{"message":"Missing id parameter"}`, http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, `{"message":"Invalid id parameter"}`, http.StatusBadRequest)
+		return
+	}
+
+	query := `select id,Title,Description,Propertytype,Price,Listingtype,PropertyStatus,Status,address,city,image_url
+				from property where id=? and Status='approved'`
+
+	var fetch model.Listing
+	err = intializer.DB.QueryRow(query, id).Scan(
+		&fetch.Id, &fetch.Title, &fetch.Description, &fetch.PropertyType,
+		&fetch.Price, &fetch.ListingType, &fetch.PropertyStatus, &fetch.Status,
+		&fetch.Address, &fetch.City, &fetch.Imageurl,
+	)
+	if err == sql.ErrNoRows {
+		http.Error(w, `{"message":"Event not found"}`, http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(fetch)
 }
