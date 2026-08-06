@@ -80,7 +80,6 @@ const GharBasaiSettings = () => {
         name: data.name || '',
         phone: data.phone || '',
         email: data.email || '',
-        city: data.city || '',
         address: data.address || '',
         age: data.age || 0
       });
@@ -109,7 +108,6 @@ const GharBasaiSettings = () => {
           address: profile.address,
           phone: profile.phone,
           age: Number(profile.age),
-          city: profile.city
         })
       });
 
@@ -286,15 +284,6 @@ const GharBasaiSettings = () => {
                   value={profile.email}
                   disabled
                   readOnly
-                />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label small fw-semibold">City</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={profile.city}
-                  onChange={(e) => setProfile({ ...profile, city: e.target.value })}
                 />
               </div>
               <div className="col-md-8">

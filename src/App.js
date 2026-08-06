@@ -15,10 +15,9 @@ import ViewProfile from './ViewProfile.js';
 import ChangePassword from './Password.js';
 import AIChatbox from './Chatbox.js';
 import AboutPage from './aboutus.js';
+import Enquiry from './enquiry.js';
 
 // Reads the current role out of localStorage and normalizes it.
-// Pulled into a function so it can be called both on mount and whenever
-// auth state might have changed (route change, login, logout).
 function readUserRole() {
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
   const rawRole = storedUser?.role || storedUser?.Status || storedUser?.status || "";
@@ -29,30 +28,18 @@ function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const location = useLocation();
 
-  // IMPORTANT: userRole must be React state, not a plain const computed
-  // inline on every render. A plain const only reflects whatever was in
-  // localStorage the instant this line ran — it does NOT update just
-  // because localStorage changes later (e.g. after login, or after the
-  // Sidebar fetches /user/me and writes the real role). Without state,
-  // App keeps using a stale/empty role forever, and isAdmin never
-  // becomes true even after a successful admin login.
+  // State-based role handling to prevent stale state on auth changes
   const [userRole, setUserRole] = useState(readUserRole);
 
   const isAdmin = userRole === "admin" || userRole === "owner";
+  const isSeller = userRole === "seller";
 
-  // Re-read the role whenever the route changes. Login/logout normally
-  // navigate (e.g. to "/" after login, "/login" after logout), so this
-  // alone catches most auth transitions.
+  // Re-read the role whenever the route changes
   useEffect(() => {
     setUserRole(readUserRole());
   }, [location.pathname]);
 
-  // Also react immediately to explicit auth-change signals, so App
-  // doesn't have to wait for a route change to pick up the new role:
-  // - "authChanged": dispatched by Sidebar's logout handler (and should
-  //   also be dispatched by AuthPage right after a successful login)
-  // - "userRoleUpdated": dispatched by Sidebar after /user/me resolves
-  // - "storage": fires in OTHER tabs when localStorage changes there
+  // React immediately to custom auth events and storage changes
   useEffect(() => {
     const handleAuthChange = () => setUserRole(readUserRole());
 
@@ -85,8 +72,12 @@ function App() {
       <Navbar isDarkMode={isDarkMode} />
 
       <div className="d-flex flex-grow-1 position-relative">
-
-        <Sidebar isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} isAdmin={isAdmin} />
+        <Sidebar 
+          isDarkMode={isDarkMode} 
+          setIsDarkMode={setIsDarkMode} 
+          isAdmin={isAdmin} 
+          isSeller={isSeller} 
+        />
 
         {/*
           This route body pane forces background changes explicitly
@@ -103,8 +94,9 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard isDarkMode={isDarkMode} />} />
             <Route path="/contact" element={<Contact isDarkMode={isDarkMode} />} />
+            <Route path="/enquiry" element={(isAdmin || isSeller) ? <Enquiry isDarkMode={isDarkMode} /> : <Navigate to="/" replace />} />
             <Route path="/eventdetail/:id" element={<EventDescription isDarkMode={isDarkMode} />} />
-
+<Route path="/eventdetail/:id" element={<EventDescription isDarkMode={isDarkMode} />} />
             {/* Protected Admin Routes */}
             <Route path="/users" element={isAdmin ? <Users isDarkMode={isDarkMode} /> : <Navigate to="/" replace />} />
             <Route path="/AdminReview" element={isAdmin ? <AdminReview isDarkMode={isDarkMode} /> : <Navigate to="/" replace />} />

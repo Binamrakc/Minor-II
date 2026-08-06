@@ -286,23 +286,7 @@ function RegisterPage() {
               </button>
             </div>
 
-            <div className="d-flex gap-2 pt-2 border-top justify-content-start">
-              <a href="#appstore" className="btn btn-dark d-flex align-items-center bg-black border-0 px-3 py-1" style={{ borderRadius: "6px" }}>
-                <i className="bi bi-apple me-2" style={{ fontSize: "1.2rem" }}></i>
-                <div className="text-start" style={{ lineHeight: "1" }}>
-                  <small style={{ fontSize: "0.6rem", display: "block", color: "#a0a0a0" }}>Download on the</small>
-                  <span style={{ fontSize: "0.85rem", fontWeight: "600" }}>App Store</span>
-                </div>
-              </a>
-              <a href="#playstore" className="btn btn-dark d-flex align-items-center bg-black border-0 px-3 py-1" style={{ borderRadius: "6px" }}>
-                <i className="bi bi-play-btn-fill me-2" style={{ fontSize: "1.2rem", color: "#3bccff" }}></i>
-                <div className="text-start" style={{ lineHeight: "1" }}>
-                  <small style={{ fontSize: "0.6rem", display: "block", color: "#a0a0a0" }}>GET IT ON</small>
-                  <span style={{ fontSize: "0.85rem", fontWeight: "600" }}>Google Play</span>
-                </div>
-              </a>
-            </div>
-
+          
           </div>
         </div>
       </div>

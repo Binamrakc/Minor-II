@@ -1,12 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Carousel } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-function PropertyDetails() {
+function EventDescription() {
   const navigate = useNavigate();
+  const { id } = useParams();
+
+  const [property, setProperty] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [comment, setComment] = useState("");
-
   const [comments, setComments] = useState([
     {
       name: "Ram Sharma",
@@ -17,6 +21,31 @@ function PropertyDetails() {
       message: "Is the parking area available?",
     },
   ]);
+
+  useEffect(() => {
+    setLoading(true);
+    setError("");
+    fetch(`http://localhost:8080/event?id=${id}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
+      })
+      .then((data) => setProperty(data))
+      .catch((err) => setError(err.message || "Failed to load property"))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  // event.image comes from the backend as a JSON-encoded array string
+  // (see CreateEvent's imageJSON), e.g. '["http://localhost:8080/uploads/foo.jpg"]'
+  // — not a plain URL — so it must be parsed before use.
+  const getImages = (event) => {
+    try {
+      const urls = JSON.parse(event?.image || "[]");
+      return Array.isArray(urls) ? urls : [];
+    } catch {
+      return [];
+    }
+  };
 
   const addComment = () => {
     if (comment.trim() === "") return;
@@ -32,46 +61,55 @@ function PropertyDetails() {
     setComment("");
   };
 
-  const property = {
-    title: "Luxury Apartment",
-    price: "NPR 25,000/month",
-    location: "Kathmandu, Nepal",
-    bedrooms: 3,
-    bathrooms: 2,
-    parking: 1,
-    area: "1500 sq. ft.",
+  if (loading) return <div className="container py-4">Loading…</div>;
 
-    description:
-      "This luxurious apartment provides a spacious living room, a modern kitchen, comfortable bedrooms, attached bathrooms, and a private balcony. It is situated in a peaceful environment close to schools, hospitals, supermarkets, and public transportation.",
+  if (error) {
+    return (
+      <div className="container py-4">
+        <div className="alert alert-danger">{error}</div>
+      </div>
+    );
+  }
 
-    images: [
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200",
-      "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200",
-      "https://images.unsplash.com/photo-1494526585095-c41746248156?w=1200",
-      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200",
-    ],
-  };
+  if (!property) {
+    return (
+      <div className="container py-4">
+        <p>Property not found.</p>
+      </div>
+    );
+  }
+
+  const images = getImages(property);
 
   return (
     <div className="container py-4">
       {/* Images */}
 
       <div className="shadow rounded overflow-hidden mb-4">
-        <Carousel>
-          {property.images.map((image, index) => (
-            <Carousel.Item key={index}>
-              <img
-                src={image}
-                alt="Property"
-                className="d-block w-100"
-                style={{
-                  height: "500px",
-                  objectFit: "cover",
-                }}
-              />
-            </Carousel.Item>
-          ))}
-        </Carousel>
+        {images.length > 0 ? (
+          <Carousel>
+            {images.map((image, index) => (
+              <Carousel.Item key={index}>
+                <img
+                  src={image}
+                  alt={property.title}
+                  className="d-block w-100"
+                  style={{
+                    height: "500px",
+                    objectFit: "cover",
+                  }}
+                />
+              </Carousel.Item>
+            ))}
+          </Carousel>
+        ) : (
+          <img
+            src="https://picsum.photos/1200/500"
+            alt={property.title}
+            className="d-block w-100"
+            style={{ height: "500px", objectFit: "cover" }}
+          />
+        )}
       </div>
 
       {/* Property card */}
@@ -83,7 +121,7 @@ function PropertyDetails() {
           <h4 className="text-success mt-3">{property.price}</h4>
 
           <p className="mt-3">
-            <strong>Location:</strong> {property.location}
+            <strong>Location:</strong> {property.address}, {property.city}
           </p>
 
           <hr />
@@ -92,16 +130,7 @@ function PropertyDetails() {
 
           <h3 className="mb-3">Overview</h3>
 
-          <p className="text-muted">
-            {property.description}
-          </p>
-
-          <p className="text-muted">
-            The apartment offers modern architecture, excellent ventilation,
-            natural lighting, and high-quality finishing. Residents can enjoy
-            nearby shopping centres, schools, restaurants, and healthcare
-            facilities.
-          </p>
+          <p className="text-muted">{property.description}</p>
 
           <hr />
 
@@ -112,54 +141,30 @@ function PropertyDetails() {
           <div className="row">
             <div className="col-md-3 col-6 mb-3">
               <div className="border rounded p-3 text-center">
-                <h6>Bedrooms</h6>
-                <strong>{property.bedrooms}</strong>
+                <h6>Property Type</h6>
+                <strong>{property.propertytype}</strong>
               </div>
             </div>
 
             <div className="col-md-3 col-6 mb-3">
               <div className="border rounded p-3 text-center">
-                <h6>Bathrooms</h6>
-                <strong>{property.bathrooms}</strong>
+                <h6>Listing Type</h6>
+                <strong>{property.listingtype}</strong>
               </div>
             </div>
 
             <div className="col-md-3 col-6 mb-3">
               <div className="border rounded p-3 text-center">
-                <h6>Parking</h6>
-                <strong>{property.parking}</strong>
+                <h6>Status</h6>
+                <strong>{property.propertystatus}</strong>
               </div>
             </div>
 
             <div className="col-md-3 col-6 mb-3">
               <div className="border rounded p-3 text-center">
-                <h6>Area</h6>
-                <strong>{property.area}</strong>
+                <h6>City</h6>
+                <strong>{property.city}</strong>
               </div>
-            </div>
-          </div>
-
-          <hr />
-
-          {/* Facilities */}
-
-          <h3 className="mb-3">Facilities</h3>
-
-          <div className="row">
-            <div className="col-md-6">
-              <ul>
-                <li>Twenty-four-hour security</li>
-                <li>Parking area</li>
-                <li>Water supply</li>
-              </ul>
-            </div>
-
-            <div className="col-md-6">
-              <ul>
-                <li>High-speed internet</li>
-                <li>Modern kitchen</li>
-                <li>Nearby hospitals and schools</li>
-              </ul>
             </div>
           </div>
 
@@ -188,10 +193,7 @@ function PropertyDetails() {
             onChange={(e) => setComment(e.target.value)}
           ></textarea>
 
-          <button
-            className="btn btn-success mt-3 mb-4"
-            onClick={addComment}
-          >
+          <button className="btn btn-success mt-3 mb-4" onClick={addComment}>
             Post Comment
           </button>
 
@@ -209,4 +211,4 @@ function PropertyDetails() {
   );
 }
 
-export default PropertyDetails;
+export default EventDescription;

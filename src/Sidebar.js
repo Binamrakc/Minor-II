@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 // Go Backend Base URL
 const API_BASE_URL = "http://localhost:8080";
 
-function Sidebar({ isDarkMode, setIsDarkMode }) {
+function Sidebar({ isDarkMode, setIsDarkMode, isAdmin: propIsAdmin, isSeller: propIsSeller }) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -14,20 +14,11 @@ function Sidebar({ isDarkMode, setIsDarkMode }) {
   const [userRole, setUserRole] = useState("user");
 
   // Fetch logged-in user details & role from Go backend.
-  // NOTE: per the actual /user/me response, the role lives in the
-  // "status" field (e.g. "status": "admin"), NOT "role".
-  //
-  // This is wrapped so it can be re-run any time auth state might have
-  // changed, not just on the sidebar's first mount — otherwise, if the
-  // sidebar stays mounted across a logout/login cycle (typical for a
-  // shared layout), it keeps showing the *previous* user's role/name.
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        // No token (e.g. just logged out) — reset to defaults immediately
-        // instead of leaving the previous user's name/role on screen.
         setUserName("User");
         setUserRole("user");
         return;
@@ -58,7 +49,6 @@ function Sidebar({ isDarkMode, setIsDarkMode }) {
           // Notify App.js of the change
           window.dispatchEvent(new Event("userRoleUpdated"));
         } else {
-          // Token rejected/expired — fall back to defaults
           setUserName("User");
           setUserRole("user");
         }
@@ -69,10 +59,6 @@ function Sidebar({ isDarkMode, setIsDarkMode }) {
 
     fetchUserData();
 
-    // Re-run when another tab/window changes localStorage (e.g. logs out
-    // or in), and when this tab dispatches a manual "authChanged" event
-    // right after login/logout so the update is instant in the SAME tab
-    // ("storage" events don't fire in the tab that made the change).
     window.addEventListener("storage", fetchUserData);
     window.addEventListener("authChanged", fetchUserData);
 
@@ -80,25 +66,20 @@ function Sidebar({ isDarkMode, setIsDarkMode }) {
       window.removeEventListener("storage", fetchUserData);
       window.removeEventListener("authChanged", fetchUserData);
     };
-    // Re-run on route change too, since login/logout normally navigate
-    // (e.g. redirect to "/" after login, or to "/login" after logout).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
-  const isAdmin = userRole === "admin" || userRole === "owner";
-  const isSeller = userRole === "seller";
+  // Use state role if available; otherwise fall back to incoming props
+  const isAdmin = userRole === "admin" || userRole === "owner" || propIsAdmin;
+  const isSeller = userRole === "seller" || propIsSeller;
 
   const handleLogout = (e) => {
     e.preventDefault();
     localStorage.removeItem("token");
     localStorage.removeItem("user");
 
-    // Reset local state right away so the sidebar doesn't briefly keep
-    // showing the old user's name/role before the redirect happens.
     setUserName("User");
     setUserRole("user");
 
-    // Let this tab know auth changed immediately (see fetchUserData effect).
     window.dispatchEvent(new Event("authChanged"));
 
     setMobileOpen(false);
@@ -107,13 +88,6 @@ function Sidebar({ isDarkMode, setIsDarkMode }) {
 
   const isActive = (path) => location.pathname.toLowerCase() === path.toLowerCase();
 
-  // Build the nav list based on role (from data.status):
-  // - Admin: everything (Dashboard, About, Contact, Create Event, Users,
-  //          Admin Review, Inquiries, Settings)
-  // - Seller: Dashboard, About, Contact, Create Event, Inquiries, Settings
-  //           (no Users, no Admin Review)
-  // - User (default): Dashboard, About, Contact, Create Event, Settings
-  //           (no Users, no Admin Review, no Inquiries)
   const navItems = [
     { path: "/", label: "Dashboard", icon: "house" },
     { path: "/about", label: "About Us", icon: "info-circle" },
@@ -128,7 +102,7 @@ function Sidebar({ isDarkMode, setIsDarkMode }) {
       : []),
 
     ...(isAdmin || isSeller
-      ? [{ path: "/inquiry", label: "View Inquiry", icon: "envelope-paper" }]
+      ? [{ path: "/enquiry", label: "View Inquiry", icon: "envelope-paper" }]
       : []),
 
     { path: "/setting", label: "Settings", icon: "gear" },

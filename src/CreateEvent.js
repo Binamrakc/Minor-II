@@ -375,22 +375,7 @@ function CreateEvent() {
               </button>
             </form>
 
-            <div className="d-flex gap-2 pt-4 border-top justify-content-start mt-4">
-              <div className="btn btn-dark d-flex align-items-center bg-black border-0 px-3 py-1 opacity-70" style={{ borderRadius: "6px", cursor: "default" }}>
-                <i className="bi bi-apple me-2" style={{ fontSize: "1.2rem" }}></i>
-                <div className="text-start" style={{ lineHeight: "1" }}>
-                  <small style={{ fontSize: "0.55rem", display: "block", color: "#a0a0a0" }}>Download on the</small>
-                  <span style={{ fontSize: "0.8rem", fontWeight: "600" }}>App Store</span>
-                </div>
-              </div>
-              <div className="btn btn-dark d-flex align-items-center bg-black border-0 px-3 py-1 opacity-70" style={{ borderRadius: "6px", cursor: "default" }}>
-                <i className="bi bi-google-play me-2" style={{ fontSize: "1.1rem", color: "#3bccff" }}></i>
-                <div className="text-start" style={{ lineHeight: "1" }}>
-                  <small style={{ fontSize: "0.55rem", display: "block", color: "#a0a0a0" }}>GET IT ON</small>
-                  <span style={{ fontSize: "0.8rem", fontWeight: "600" }}>Google Play</span>
-                </div>
-              </div>
-            </div>
+          
 
           </div>
         </div>
