@@ -43,7 +43,6 @@ func Getequiry(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized Method !", http.StatusUnauthorized)
 		return
 	}
-
 	query := "SELECT id, email, phone, description, created_at FROM contact"
 	rows, err := intializer.DB.Query(query)
 	if err != nil {

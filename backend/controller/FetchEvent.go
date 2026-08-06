@@ -54,14 +54,6 @@ func Adminapprove(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"message":"Forbidden: Admin access required"}`, http.StatusForbidden)
 		return
 	}
-	// NOTE: column names here (Listingtype, PropertyStatus) don't match
-	// GetDashboard's query (Listing_type, Property_Status) above.
-	// Confirm which naming your actual schema uses and make both consistent.
-	//
-	// image_url is now included below — it was previously missing from
-	// both the SELECT and the Scan call, so the frontend never received
-	// any image data for pending listings (this was the root cause of
-	// images not showing on the admin review page).
 	query := `select id,Title,Description,Propertytype,Price,Listingtype,PropertyStatus,Status,address,city,image_url
 				from property where Status='pending'`
 	rows, err := intializer.DB.Query(query)
@@ -74,10 +66,6 @@ func Adminapprove(w http.ResponseWriter, r *http.Request) {
 	pending := []model.Listing{}
 	for rows.Next() {
 		var fetch model.Listing
-		// NOTE: &fetch.ImageUrl assumes model.Listing has a field named
-		// ImageUrl (json tag "image", matching CreateEvent's image_url
-		// column). If your struct uses a different field name, rename
-		// it here to match.
 		err := rows.Scan(&fetch.Id, &fetch.Title, &fetch.Description, &fetch.PropertyType, &fetch.Price, &fetch.ListingType, &fetch.PropertyStatus, &fetch.Status, &fetch.Address, &fetch.City, &fetch.Imageurl)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -27,14 +27,12 @@ func CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Limit total upload size to 32MB
 	err := r.ParseMultipartForm(32 << 20)
 	if err != nil {
 		http.Error(w, "File too large or invalid form data", http.StatusBadRequest)
 		return
 	}
 
-	// Read & Sanitize form fields
 	title := strings.TrimSpace(r.FormValue("title"))
 	description := strings.TrimSpace(r.FormValue("description"))
 	propertytype := strings.ToLower(strings.TrimSpace(r.FormValue("propertytype")))
@@ -45,30 +43,24 @@ func CreateEvent(w http.ResponseWriter, r *http.Request) {
 	address := strings.TrimSpace(r.FormValue("address"))
 	city := strings.TrimSpace(r.FormValue("city"))
 
-	// --- VALIDATION & DEFAULTS --- //
-
-	// Validate ENUM: propertytype ('apartment', 'house', 'villa', 'office')
 	validPropertyTypes := map[string]bool{"apartment": true, "house": true, "villa": true, "office": true}
 	if !validPropertyTypes[propertytype] {
 		http.Error(w, "Invalid propertytype. Allowed: apartment, house, villa, office", http.StatusBadRequest)
 		return
 	}
 
-	// Validate ENUM: listingtype ('sale', 'rent')
 	validListingTypes := map[string]bool{"sale": true, "rent": true}
 	if !validListingTypes[listingtype] {
 		http.Error(w, "Invalid listingtype. Allowed: sale, rent", http.StatusBadRequest)
 		return
 	}
 
-	// Parse price from string to integer
 	price, err := strconv.Atoi(priceStr)
 	if err != nil || price < 0 {
 		http.Error(w, "Price must be a valid positive number", http.StatusBadRequest)
 		return
 	}
 
-	// Set Defaults for optional ENUM fields
 	if propertystatus == "" {
 		propertystatus = "available"
 	}
@@ -126,23 +118,11 @@ func CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Clean Query (Standard Space Characters)
 	query := `INSERT INTO Property (title, description, propertytype, price, listingtype, propertystatus, status, address, city, image_url) 
 	          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	_, err = intializer.DB.Exec(
-		query,
-		title,
-		description,
-		propertytype,
-		price, // Passed as integer
-		listingtype,
-		propertystatus,
-		status,
-		address,
-		city,
-		string(imageJSON),
-	)
+		query, title, description, propertytype, price, listingtype, propertystatus, status, address, city, string(imageJSON))
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -171,32 +171,21 @@ func Deleteownid(w http.ResponseWriter, r *http.Request) {
 }
 
 func Getprofile(w http.ResponseWriter, r *http.Request) {
-	// Ensure correct HTTP Method
+
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	// 1. Retrieve logged-in user's email set by Jwtmiddleware
 	userEmail, ok := r.Context().Value(middleware.UserEmailKey).(string)
 	if !ok || userEmail == "" {
 		http.Error(w, `{"message":"Unauthorized: Need to login"}`, http.StatusUnauthorized)
 		return
 	}
-
-	// 2. Query user details from the 'register' table using the email
 	var user model.Registerinput
 	query := `SELECT Id, name, email, address, phone, age, Status FROM register WHERE email = ?`
 
 	err := intializer.DB.QueryRow(query, userEmail).Scan(
-		&user.Id,
-		&user.Name,
-		&user.Email,
-		&user.Address,
-		&user.Phone,
-		&user.Age,
-		&user.Status,
-	)
+		&user.Id, &user.Name, &user.Email, &user.Address, &user.Phone, &user.Age, &user.Status)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -207,7 +196,6 @@ func Getprofile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Send full user profile response as JSON
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(user)

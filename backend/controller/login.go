@@ -15,7 +15,6 @@ import (
 func Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// 1. Correct Status Code for Wrong HTTP Method
 	if r.Method != http.MethodPost {
 		http.Error(w, `{"message":"Method not allowed"}`, http.StatusMethodNotAllowed)
 		return
@@ -30,31 +29,24 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	var storeshash string
 	var id int
-	var role string // Added role fetching
+	var role string
 
-	// Fetch password & role (optional, adjust query to match your schema)
 	result := "SELECT id, password,status FROM register WHERE email = ?"
 	err = intializer.DB.QueryRow(result, login.Email).Scan(&id, &storeshash, &role)
 	if err != nil {
 		http.Error(w, `{"message":"Invalid email or password"}`, http.StatusUnauthorized)
 		return
 	}
-
-	// Compare bcrypt hash
 	err = bcrypt.CompareHashAndPassword([]byte(storeshash), []byte(login.Password))
 	if err != nil {
 		http.Error(w, `{"message":"Invalid email or password"}`, http.StatusUnauthorized)
 		return
 	}
-
-	// Generate JWT
 	tokenstring, err := JWT(login.Email, role)
 	if err != nil {
 		http.Error(w, `{"message":"Failed to generate token"}`, http.StatusInternalServerError)
 		return
 	}
-
-	// Respond with Token
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Login Successful",
@@ -71,7 +63,7 @@ func JWT(email string, role string) (string, error) {
 
 	secret := os.Getenv("JWT_TOKEN")
 	if secret == "" {
-		secret = "default_secret" // Fixed spelling
+		secret = "default_secret"
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
